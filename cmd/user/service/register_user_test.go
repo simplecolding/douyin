@@ -30,6 +30,10 @@ func TestRegisterUserService_RegisterUser(t *testing.T) {
 			name: "t2",
 			args: args{req: &user.DouyinUserRegisterRequest{Username: "jack",Password: "123456"}},
 		},
+		{
+			name: "t3",
+			args: args{req: &user.DouyinUserRegisterRequest{Username: "bob",Password: "123456"}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

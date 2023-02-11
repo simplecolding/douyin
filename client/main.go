@@ -22,7 +22,7 @@ func main()  {
 	if err != nil {
 		log.Fatal(err)
 	}
-	req := &user.DouyinUserLoginRequest{Username: "yanjiang",Password: "123456"}
+	req := &user.DouyinUserLoginRequest{Username: "yanjiang_test",Password: "123456"}
 	resp, err := c.LoginUser(context.Background(), req,
 		callopt.WithRPCTimeout(3*time.Second), // 连接超时
 	)
@@ -31,7 +31,7 @@ func main()  {
 	}
 	log.Println(resp)
 
-	reqereg := &user.DouyinUserRegisterRequest{Username: "yanjiang",Password: "123456"}
+	reqereg := &user.DouyinUserRegisterRequest{Username: "yanjiang_test",Password: "123456"}
 	respreg, err := c.RegisterUser(context.Background(), reqereg, callopt.WithRPCTimeout(3*time.Second))
 	if err != nil {
 		log.Fatal(err)

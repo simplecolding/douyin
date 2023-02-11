@@ -14,6 +14,7 @@ type User struct {
 	//IsFollow bool
 	UserName string `gorm:"NOT NULL;UNIQUE",json:"user_name"`
 	Password string `gorm:"NOT NULL;",json:"password"`
+	ID int `gorm:"NOT NULL;PRIMARY KEY;AUTO_INCREMENT=1"`
 	gorm.Model
 }
 
@@ -31,18 +32,22 @@ func preTable() error {
 	}
 	return nil
 }
-func RegisterUser(ctx context.Context, user []*User) (uid int, err error) {
+func RegisterUser(ctx context.Context, user *User) (uid int, err error) {
 	err = preTable()
 	if err != nil {
 		return -1, err
 	}
 	err = DB.Create(user).Error
-	uid = 1
+	uid = QueryByUserName(user.UserName)
 	return uid, err
 }
 
-//func QueryByUserName(username string) (uid int ){
-//	var user User
-//	err := DB.
-//	return uid
-//}
+func QueryByUserName(username string) (uid int){
+	var user User
+	err := DB.Where("UserName = ?", username).Take(&user)
+	if err != nil {
+		return -1
+	}
+	uid = int(user.Model.ID)
+	return
+}

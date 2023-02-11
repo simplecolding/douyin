@@ -14,14 +14,11 @@ func NewRegisterUserService(ctx context.Context) *RegisterUserService{
 	return &RegisterUserService{ctx: ctx}
 }
 
-func (s *RegisterUserService) RegisterUser(req *user.DouyinUserRegisterRequest) error {
-	_, err := db.RegisterUser(s.ctx, []*db.User{{
-		UserName: req.Username,
-		Password: req.Password,
-	}})
+func (s *RegisterUserService) RegisterUser(req *user.DouyinUserRegisterRequest) (uid int,err error) {
+	uid, err = db.RegisterUser(s.ctx, &db.User{UserName: req.Username, Password: req.Password})
 	if err != nil {
 		//
 	}
-	return err
+	return uid, err
 }
 

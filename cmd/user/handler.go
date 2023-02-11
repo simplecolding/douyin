@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/simplecolding/douyin/cmd/user/service"
 	user "github.com/simplecolding/douyin/kitex_gen/user"
 )
 
@@ -29,5 +30,12 @@ func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user.DouyinUser
 	resp.StatusMsg = "sucess"
 	resp.Token = "gjhjfg"
 	resp.StatusCode = 0
-	return resp, err
+
+	uid, err := service.NewRegisterUserService(ctx).RegisterUser(req)
+	if err != nil {
+		panic(err)
+	}
+	resp.UserId = int64(uid)
+
+	return resp, nil
 }
