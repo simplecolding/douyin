@@ -9,12 +9,13 @@ import (
 type User struct {
 	//UserId int `gorm:"primaryKey;AUTO_INCREMENT"`
 	//UserName string
-	//FollowCount int
-	//FollowerCount int
-	//IsFollow bool
-	UserName string `gorm:"NOT NULL;UNIQUE",json:"user_name"`
-	Password string `gorm:"NOT NULL;",json:"password"`
 	ID int `gorm:"NOT NULL;PRIMARY KEY;AUTO_INCREMENT=1"`
+	UserName string `gorm:"NOT NULL;UNIQUE" json:"user_name"`
+	Password string `gorm:"NOT NULL;" json:"password"`
+	FollowCount int `gorm:"default:0;"`
+	FollowerCount int `gorm:"default:0;"`
+	Avatar string `gorm:"default:"`
+	IsFollow bool `gorm:"default:false"`
 	gorm.Model
 }
 
