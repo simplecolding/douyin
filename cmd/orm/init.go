@@ -2,7 +2,7 @@ package orm
 
 import (
 	"fmt"
-	"github.com/simplecolding/douyin/cmd/follow/orm/dal"
+	"github.com/simplecolding/douyin/cmd/orm/dal"
 	"github.com/simplecolding/douyin/pkg/constants"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

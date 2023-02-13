@@ -1,18 +1,6 @@
 version: '3'
 
 services:
-  mysql:
-    image: 'mysql:latest'
-    volumes:
-      - ./pkg/configs/sql:/docker-entrypoint-initdb.d
-    ports:
-      - 3306:3306
-    environment:
-      - MYSQL_DATABASE=gorm
-      - MYSQL_USER=gorm
-      - MYSQL_PASSWORD=gorm
-      - MYSQL_RANDOM_ROOT_PASSWORD="yes"
-
   redis:
     image: redis:latest
     container_name: redis
@@ -20,8 +8,8 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:rw
-      - ./redis/data:/data:rw
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:rw
+      - ./data:/data:rw
     command:
       /bin/bash -c "redis-server /usr/local/etc/redis/redis.conf "
 #  Etcd:

@@ -16,34 +16,49 @@ import (
 )
 
 var (
-	Q          = new(Query)
-	FollowUser *followUser
+	Q        = new(Query)
+	Comment  *comment
+	Love     *love
+	UserAuth *userAuth
+	Video    *video
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
-	FollowUser = &Q.FollowUser
+	Comment = &Q.Comment
+	Love = &Q.Love
+	UserAuth = &Q.UserAuth
+	Video = &Q.Video
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:         db,
-		FollowUser: newFollowUser(db, opts...),
+		db:       db,
+		Comment:  newComment(db, opts...),
+		Love:     newLove(db, opts...),
+		UserAuth: newUserAuth(db, opts...),
+		Video:    newVideo(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	FollowUser followUser
+	Comment  comment
+	Love     love
+	UserAuth userAuth
+	Video    video
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:         db,
-		FollowUser: q.FollowUser.clone(db),
+		db:       db,
+		Comment:  q.Comment.clone(db),
+		Love:     q.Love.clone(db),
+		UserAuth: q.UserAuth.clone(db),
+		Video:    q.Video.clone(db),
 	}
 }
 
@@ -57,18 +72,27 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:         db,
-		FollowUser: q.FollowUser.replaceDB(db),
+		db:       db,
+		Comment:  q.Comment.replaceDB(db),
+		Love:     q.Love.replaceDB(db),
+		UserAuth: q.UserAuth.replaceDB(db),
+		Video:    q.Video.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	FollowUser IFollowUserDo
+	Comment  ICommentDo
+	Love     ILoveDo
+	UserAuth IUserAuthDo
+	Video    IVideoDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		FollowUser: q.FollowUser.WithContext(ctx),
+		Comment:  q.Comment.WithContext(ctx),
+		Love:     q.Love.WithContext(ctx),
+		UserAuth: q.UserAuth.WithContext(ctx),
+		Video:    q.Video.WithContext(ctx),
 	}
 }
 
