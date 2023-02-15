@@ -4,6 +4,7 @@ package User
 
 import (
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 )
 
 func rootMw() []app.HandlerFunc {
@@ -18,7 +19,7 @@ func _douyinMw() []app.HandlerFunc {
 
 func _userinfoMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
 }
 
 func _userMw() []app.HandlerFunc {

@@ -4,13 +4,14 @@ package user
 
 import (
 	"context"
-	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
-	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
-
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	user "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/user"
+	"github.com/simplecolding/douyin/hertz-server/biz/mw"
+	_ "github.com/simplecolding/douyin/hertz-server/biz/mw"
 	_ "github.com/simplecolding/douyin/hertz-server/biz/orm" //
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
 )
 
 // UserLogin .
@@ -23,10 +24,15 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-
-	resp := new(user.DouyinUserLoginResponse)
-	println(req.Password)
-	c.JSON(consts.StatusOK, resp)
+	mw.JwtMiddleware.LoginHandler(ctx, c)
+	//redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	//defer cancel()
+	//resp := new(user.DouyinUserLoginResponse)
+	//tk := "hisadfgh"
+	//resp.Token = tk
+	//redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
+	//println(redis.RD.Get(ctx, req.Username).Val())
+	//c.JSON(consts.StatusOK, resp)
 }
 
 // UserRegister .
@@ -44,10 +50,10 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 	password := req.Password
 	// query
 	u, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(username)).First()
-	if u != nil{
+	if u != nil {
 		resp.UserId = -1
 		resp.StatusCode = 1
-		resp.StatusMsg = "failed!  username已存在！！！"+username
+		resp.StatusMsg = "failed!  username已存在！！！" + username
 		c.JSON(consts.StatusOK, resp)
 		return
 		//panic(fmt.Errorf("username已存在"))
@@ -86,8 +92,11 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-
+	u, b := c.Get(mw.JwtMiddleware.IdentityKey)
+	println(b)
+	println("hhh",u)
 	resp := new(user.DouyinUserResponse)
+	//a := mw.JwtMiddleware.Authorizator(ctx,c)
 
 	c.JSON(consts.StatusOK, resp)
 }

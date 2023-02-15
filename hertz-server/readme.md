@@ -26,3 +26,11 @@ docker-compose up
 cd ./hertz-server/scripts
 go run generate.go
 ```
+
+curl --location --request POST '127.0.0.1:8888/douyin/user/register/?username=sgd&password=gf' --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
+curl --location --request POST '127.0.0.1:8888/douyin/user/login/?username=sgdnn&password=gf' --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
+curl --location --request POST '127.0.0.1:8888/douyin/user/' "Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzY0NzkyMDQsIm9yaWdfaWF0IjoxNjc2NDc1NjA0fQ.sPd3iHFNctrhcWkjyD4PPQt85nNqFzgziOCJdu-kM3o"  --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
+
+
+
+curl --location --request POST '127.0.0.1:8888/douyin/user'   --header "Authorization:Bearer "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbSI6eyJJRCI6MiwiVXNlcm5hbWUiOiJzZ2RubiJ9LCJleHAiOjE2NzY0ODM0ODksIm9yaWdfaWF0IjoxNjc2NDc5ODg5fQ.ZW5yXvP2okfFEKVemXX3V7DsOEuvsuL1PY4-L9wHqcY"   --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
