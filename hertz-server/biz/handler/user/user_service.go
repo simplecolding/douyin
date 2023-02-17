@@ -25,6 +25,7 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	mw.JwtMiddleware.LoginHandler(ctx, c)
+	//println(mw.JwtMiddleware.GetClaimsFromJWT(ctx, c))
 	//redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	//defer cancel()
 	//resp := new(user.DouyinUserLoginResponse)
@@ -92,11 +93,10 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	u, b := c.Get(mw.JwtMiddleware.IdentityKey)
-	println(b)
-	println("hhh",u)
+	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	println(u.(*mw.Claim).ID,u.(*mw.Claim).Username)
 	resp := new(user.DouyinUserResponse)
-	//a := mw.JwtMiddleware.Authorizator(ctx,c)
-
+	resp.StatusCode = int32(0)
+	resp.StatusMsg = "success"
 	c.JSON(consts.StatusOK, resp)
 }

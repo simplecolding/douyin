@@ -8,9 +8,10 @@ import (
 )
 
 func main() {
-	mw.InitJwt()
 	h := server.Default()
-
+	mw.InitJwt()
+	// 静态资源访问
+	h.Static("/public","./biz")
 	register(h)
 	h.Spin()
 }

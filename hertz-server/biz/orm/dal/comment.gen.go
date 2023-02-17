@@ -43,12 +43,12 @@ type comment struct {
 	commentDo
 
 	ALL       field.Asterisk
-	Cid       field.Int64 // 主键
-	Vid       field.Int64 // 视频id
-	UID       field.Int64 // 用户id
-	Status    field.Bool  // 是否删除 1:是  0:否
-	CreatedAt field.Time  // 创建时间
-	UpdatedAt field.Time  // 更新时间
+	Cid       field.Int64
+	Vid       field.Int64
+	UID       field.Int64
+	Status    field.Bool
+	CreatedAt field.Time
+	UpdatedAt field.Time
 
 	fieldMap map[string]field.Expr
 }

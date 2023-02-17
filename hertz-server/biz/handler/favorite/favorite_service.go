@@ -4,25 +4,43 @@ package favorite
 
 import (
 	"context"
-
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+
 	favorite "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/favorite"
+	"github.com/simplecolding/douyin/hertz-server/biz/mw"
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
 )
 
 // FavoriteAction .
-// @router /douyin/favorite/action [GET]
+// @router /douyin/favorite/action [POST]
 func FavoriteAction(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req favorite.DouyinFavoriteActionRequest
 	err = c.BindAndValidate(&req)
+	// jwt授权，从token中获取uid
+	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	println("favorite:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+	data, err := dal.Favorite.FilterWithVidAndUid(req.VideoId, u.(*mw.Claim).ID)
+	action := req.ActionType
+	if action == 1 {
+		if err != nil {
+			dal.Favorite.Create(&model.Favorite{Vid: req.VideoId, UID: u.(*mw.Claim).ID, Status: false})
+		} else {
+			dal.Favorite.WithContext(ctx).Where(dal.Favorite.Lid.Eq(data[0].Lid)).Update(dal.Favorite.Status, false)
+		}
+	} else {
+		dal.Favorite.WithContext(ctx).Where(dal.Favorite.Lid.Eq(data[0].Lid)).Update(dal.Favorite.Status, true)
+	}
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
 
 	resp := new(favorite.DouyinFavoriteActionResponse)
-
+	resp.StatusCode = 0
+	resp.StatusMsg = "favorite successfully"
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -36,8 +54,21 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-
 	resp := new(favorite.DouyinFavoriteListResponse)
 
+	data, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(req.UserId)).Find()
+	var video []*favorite.Video
+	for _, d := range data {
+		//uid := d.UID
+		//user
+		var v favorite.Video
+		v.Id = d.Lid // 视频唯一标识
+		v.IsFavorite = true
+		video = append(video, &v)
+	}
+
+	resp.StatusCode = 0
+	resp.StatusMsg = "success"
+	resp.VideoList = video
 	c.JSON(consts.StatusOK, resp)
 }

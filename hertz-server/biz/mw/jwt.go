@@ -19,8 +19,9 @@ package mw
 import (
 	"context"
 	"errors"
-	"github.com/simplecolding/douyin/hertz-server/biz/model/hertz/user"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
+
+	"github.com/simplecolding/douyin/hertz-server/biz/model/hertz/user"
 	"github.com/simplecolding/douyin/hertz-server/biz/redis"
 	"net/http"
 	"time"
@@ -49,15 +50,24 @@ func InitJwt() {
 		TokenLookup:   "header: Authorization, query: token, cookie: jwt",
 		TokenHeadName: "Bearer",
 		LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
+			var req user.DouyinUserLoginRequest
+			if err := c.BindAndValidate(&req); err != nil {
+				return
+			}
+			u, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(req.Username)).Take()
+			if err != nil {
+				return
+			}
 			if code == 200 {
 				// store to redis
-				redis.RD.Set(ctx, token, -1,0)
+				redis.RD.Set(ctx, token, u.UID,0)
 				println(redis.RD.Get(ctx, token).Val())
 			}
 			c.JSON(http.StatusOK, user.DouyinUserLoginResponse{
 				StatusCode: int32(code),
 				Token: token,
 				StatusMsg: "success",
+				UserId: u.UID,
 			})
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {

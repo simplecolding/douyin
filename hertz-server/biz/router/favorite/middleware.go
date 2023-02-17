@@ -4,6 +4,7 @@ package Favorite
 
 import (
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 )
 
 func rootMw() []app.HandlerFunc {
@@ -23,10 +24,10 @@ func _favoriteMw() []app.HandlerFunc {
 
 func _favorite_ctionMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
 }
 
 func _getfavoritelistMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
 }

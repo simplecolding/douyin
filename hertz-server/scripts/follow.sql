@@ -31,7 +31,7 @@ CREATE TABLE `comment` (
                          PRIMARY KEY (`cid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论表';
 
-CREATE TABLE `love` (
+CREATE TABLE `favorite` (
                            `lid` bigint unsigned AUTO_INCREMENT COMMENT '主键',
                            `vid` bigint not null COMMENT '视频id',
                            `uid` bigint not null COMMENT '用户id',

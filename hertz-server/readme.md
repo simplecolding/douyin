@@ -6,6 +6,7 @@ hz new -I ./hzidl -idl hzidl/user/user.proto -module github.com/simplecolding/do
 hz new -I ./hzidl -idl hzidl/video/video.proto -module github.com/simplecolding/douyin/hertz-server
 hz new -I ./hzidl -idl hzidl/favorite/favorite.proto -module github.com/simplecolding/douyin/hertz-server
 hz new -I ./hzidl -idl hzidl/comment/comment.proto -module github.com/simplecolding/douyin/hertz-server
+go mod tidy -go=1.16 && go mod tidy -go=1.17
 3. 生成代码,业务代码在biz/handler
 4. test(先启动数据库)
  curl --location --request POST '127.0.0.1:8888/douyin/user/register/?username=sgd&password=gf' --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
@@ -26,11 +27,21 @@ docker-compose up
 cd ./hertz-server/scripts
 go run generate.go
 ```
+# test
+```shell
+# 登陆
+curl --location '127.0.0.1:8888/douyin/user/login' \
+--form 'username="aaa"' \
+--form 'password="aaa"'
 
-curl --location --request POST '127.0.0.1:8888/douyin/user/register/?username=sgd&password=gf' --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
-curl --location --request POST '127.0.0.1:8888/douyin/user/login/?username=sgdnn&password=gf' --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
-curl --location --request POST '127.0.0.1:8888/douyin/user/' "Authorization:Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzY0NzkyMDQsIm9yaWdfaWF0IjoxNjc2NDc1NjA0fQ.sPd3iHFNctrhcWkjyD4PPQt85nNqFzgziOCJdu-kM3o"  --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
+# 获得喜欢列表
+curl --location --request GET '127.0.0.1:8888/douyin/favorite/list' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbSI6eyJJRCI6NSwiVXNlcm5hbWUiOiJhYWEifSwiZXhwIjoxNjc2NjUxNDMyLCJvcmlnX2lhdCI6MTY3NjY0NzgzMn0.J1yPDATM1ibD5CFOwMuNXsfoXRg0cwwo5bT9S7L-4bU' \
+--form 'token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbSI6eyJJRCI6NSwiVXNlcm5hbWUiOiJhYWEifSwiZXhwIjoxNjc2NjI3NjQzLCJvcmlnX2lhdCI6MTY3NjYyNDA0M30.aLnwESNHl6ViC39Bl74Sx-hUBWObBej8BPIxQgnoe-A"' \
+--form 'user_id="5"'
+```
 
-
-
-curl --location --request POST '127.0.0.1:8888/douyin/user'   --header "Authorization:Bearer "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbSI6eyJJRCI6MiwiVXNlcm5hbWUiOiJzZ2RubiJ9LCJleHAiOjE2NzY0ODM0ODksIm9yaWdfaWF0IjoxNjc2NDc5ODg5fQ.ZW5yXvP2okfFEKVemXX3V7DsOEuvsuL1PY4-L9wHqcY"   --header 'User-Agent: Apifox/1.0.0 (https://www.apifox.cn)'
+## 跨源资源共享
+```shell
+go get github.com/hertz-contrib/cors
+```

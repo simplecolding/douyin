@@ -18,7 +18,7 @@ import (
 var (
 	Q        = new(Query)
 	Comment  *comment
-	Love     *love
+	Favorite *favorite
 	UserAuth *userAuth
 	Video    *video
 )
@@ -26,7 +26,7 @@ var (
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Comment = &Q.Comment
-	Love = &Q.Love
+	Favorite = &Q.Favorite
 	UserAuth = &Q.UserAuth
 	Video = &Q.Video
 }
@@ -35,7 +35,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:       db,
 		Comment:  newComment(db, opts...),
-		Love:     newLove(db, opts...),
+		Favorite: newFavorite(db, opts...),
 		UserAuth: newUserAuth(db, opts...),
 		Video:    newVideo(db, opts...),
 	}
@@ -45,7 +45,7 @@ type Query struct {
 	db *gorm.DB
 
 	Comment  comment
-	Love     love
+	Favorite favorite
 	UserAuth userAuth
 	Video    video
 }
@@ -56,7 +56,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:       db,
 		Comment:  q.Comment.clone(db),
-		Love:     q.Love.clone(db),
+		Favorite: q.Favorite.clone(db),
 		UserAuth: q.UserAuth.clone(db),
 		Video:    q.Video.clone(db),
 	}
@@ -74,7 +74,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:       db,
 		Comment:  q.Comment.replaceDB(db),
-		Love:     q.Love.replaceDB(db),
+		Favorite: q.Favorite.replaceDB(db),
 		UserAuth: q.UserAuth.replaceDB(db),
 		Video:    q.Video.replaceDB(db),
 	}
@@ -82,7 +82,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 
 type queryCtx struct {
 	Comment  ICommentDo
-	Love     ILoveDo
+	Favorite IFavoriteDo
 	UserAuth IUserAuthDo
 	Video    IVideoDo
 }
@@ -90,7 +90,7 @@ type queryCtx struct {
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		Comment:  q.Comment.WithContext(ctx),
-		Love:     q.Love.WithContext(ctx),
+		Favorite: q.Favorite.WithContext(ctx),
 		UserAuth: q.UserAuth.WithContext(ctx),
 		Video:    q.Video.WithContext(ctx),
 	}

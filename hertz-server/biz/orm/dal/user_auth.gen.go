@@ -43,12 +43,12 @@ type userAuth struct {
 	userAuthDo
 
 	ALL       field.Asterisk
-	UID       field.Int64  // 主键
-	UserName  field.String // 用户名
-	Password  field.String // 密码
-	Status    field.Bool   // 是否删除 1:是  0:否
-	CreatedAt field.Time   // 创建时间
-	UpdatedAt field.Time   // 更新时间
+	UID       field.Int64
+	UserName  field.String
+	Password  field.String
+	Status    field.Bool
+	CreatedAt field.Time
+	UpdatedAt field.Time
 
 	fieldMap map[string]field.Expr
 }
