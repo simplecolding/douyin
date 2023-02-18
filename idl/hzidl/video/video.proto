@@ -43,7 +43,7 @@ message DouyinPublishListRequest {
 message DouyinPublishListResponse {
   int32 status_code = 1; // 状态码，0-成功，其他值-失败
   string status_msg = 2; // 返回状态描述
-  Video video_list = 3; // 用户发布的视频列表
+  repeated Video video_list = 3; // 用户发布的视频列表
 }
 
 message DouyinFeedRequest {
@@ -54,7 +54,7 @@ message DouyinFeedRequest {
 message DouyinFeedResponse {
   int32 status_code = 1; // 状态码，0-成功，其他值-失败
   string status_msg = 2; // 返回状态描述
-  Video video_list = 3; // 视频列表
+  repeated Video video_list = 3; // 视频列表
   int64 next_time = 4; // 本次返回的视频中，发布最早的时间，作为下次请求时的latest_time
 }
 
@@ -77,7 +77,7 @@ message DouyinFavoriteListRequest {
 message DouyinFavoriteListResponse {
   int32 status_code = 1; // 状态码，0-成功，其他值-失败
   string status_msg = 2; // 返回状态描述
-  Video video_list = 3; // 用户点赞视频列表
+  repeated  Video video_list = 3; // 用户点赞视频列表
 }
 
 service VideoService {

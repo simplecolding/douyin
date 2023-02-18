@@ -8,9 +8,9 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/hertz-contrib/cors v0.0.0-20220601061225-50f4e582beaf
 	github.com/hertz-contrib/jwt v1.0.2
-	github.com/simplecolding/douyin v0.0.0-20230215170336-fd4da47e042a
+	github.com/simplecolding/douyin v0.0.0-20230217154029-c16c8ed730d5
 	google.golang.org/protobuf v1.28.1
-	gorm.io/driver/mysql v1.4.6
+	gorm.io/driver/mysql v1.4.7
 	gorm.io/gen v0.3.21
 	gorm.io/gorm v1.24.5
 	gorm.io/plugin/dbresolver v1.4.1

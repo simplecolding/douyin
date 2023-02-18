@@ -4,6 +4,7 @@ package Video
 
 import (
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 )
 
 func rootMw() []app.HandlerFunc {
@@ -23,7 +24,7 @@ func _getfeedMw() []app.HandlerFunc {
 
 func _publishMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
 }
 
 func _videopublishMw() []app.HandlerFunc {
