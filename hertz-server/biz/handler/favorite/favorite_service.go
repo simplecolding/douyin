@@ -6,11 +6,11 @@ import (
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
 
 	favorite "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/favorite"
 	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
-	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
 )
 
 // FavoriteAction .
@@ -25,10 +25,10 @@ func FavoriteAction(ctx context.Context, c *app.RequestContext) {
 	data, err := dal.Favorite.FilterWithVidAndUid(req.VideoId, u.(*mw.Claim).ID)
 	action := req.ActionType
 	if action == 1 {
-		if err != nil {
-			dal.Favorite.Create(&model.Favorite{Vid: req.VideoId, UID: u.(*mw.Claim).ID, Status: false})
-		} else {
+		if data != nil {
 			dal.Favorite.WithContext(ctx).Where(dal.Favorite.Lid.Eq(data[0].Lid)).Update(dal.Favorite.Status, false)
+		} else {
+			dal.Favorite.Create(&model.Favorite{Vid: req.VideoId, UID: u.(*mw.Claim).ID, Status: false})
 		}
 	} else {
 		dal.Favorite.WithContext(ctx).Where(dal.Favorite.Lid.Eq(data[0].Lid)).Update(dal.Favorite.Status, true)

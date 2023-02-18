@@ -30,7 +30,7 @@ func newComment(db *gorm.DB, opts ...gen.DOOption) comment {
 	_comment.Cid = field.NewInt64(tableName, "cid")
 	_comment.Vid = field.NewInt64(tableName, "vid")
 	_comment.UID = field.NewInt64(tableName, "uid")
-	_comment.Status = field.NewBool(tableName, "status")
+	_comment.Content = field.NewString(tableName, "content")
 	_comment.CreatedAt = field.NewTime(tableName, "created_at")
 	_comment.UpdatedAt = field.NewTime(tableName, "updated_at")
 
@@ -46,7 +46,7 @@ type comment struct {
 	Cid       field.Int64
 	Vid       field.Int64
 	UID       field.Int64
-	Status    field.Bool
+	Content   field.String
 	CreatedAt field.Time
 	UpdatedAt field.Time
 
@@ -68,7 +68,7 @@ func (c *comment) updateTableName(table string) *comment {
 	c.Cid = field.NewInt64(table, "cid")
 	c.Vid = field.NewInt64(table, "vid")
 	c.UID = field.NewInt64(table, "uid")
-	c.Status = field.NewBool(table, "status")
+	c.Content = field.NewString(table, "content")
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
 
@@ -91,7 +91,7 @@ func (c *comment) fillFieldMap() {
 	c.fieldMap["cid"] = c.Cid
 	c.fieldMap["vid"] = c.Vid
 	c.fieldMap["uid"] = c.UID
-	c.fieldMap["status"] = c.Status
+	c.fieldMap["content"] = c.Content
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 }

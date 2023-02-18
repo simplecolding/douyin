@@ -15,7 +15,7 @@ type Comment struct {
 	Cid       int64     `gorm:"column:cid;primaryKey;autoIncrement:true" json:"cid"`           // 主键
 	Vid       int64     `gorm:"column:vid;not null" json:"vid"`                                // 视频id
 	UID       int64     `gorm:"column:uid;not null" json:"uid"`                                // 用户id
-	Status    bool      `gorm:"column:status;default:1" json:"status"`                         // 是否删除 1:是  0:否
+	Content   string    `gorm:"column:content;not null" json:"content"`                        // 评论内容，不能超过255字符
 	CreatedAt time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP" json:"created_at"` // 创建时间
 	UpdatedAt time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP" json:"updated_at"` // 更新时间
 }

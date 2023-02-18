@@ -4,10 +4,18 @@ package video
 
 import (
 	"context"
+	video "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/video"
+	"github.com/simplecolding/douyin/hertz-server/biz/mw"
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-	video "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/video"
 )
 
 // VideoPublish .
@@ -23,6 +31,47 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 
 	resp := new(video.DouyinPublishActionResponse)
 
+	// jwt授权，从token中获取uid
+	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	println("comment:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+
+	// 检查文件类型
+	fileType := http.DetectContentType(req.Data)
+	userName := u.(*mw.Claim).Username
+	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
+	//fileEndings, err := mime.ExtensionsByType(fileType)
+	if err != nil {
+		println("get filetype failed")
+		return
+	}
+	if fileType != "video/mp4" {
+		println("video incorrect")
+	}
+	filePath := filepath.Join("/home/demo/GolandProjects/douyin/hertz-server/biz/public", fileName+".mp4")
+	newFile, err := os.Create(filePath)
+	if err != nil {
+		println("create file failed")
+		return
+	}
+	defer newFile.Close()
+	for i := 0; i < 10; i++ {
+		req.Data = append(req.Data, byte(i))
+	}
+	req.Data = append(req.Data, 1)
+	if _, err := newFile.Write(req.Data); err != nil {
+		println("write file failed")
+		return
+	}
+	playUrl := "127.0.0.1/public" + fileName + ".mp4"
+	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: u.(*mw.Claim).ID, PlayURL: playUrl, CoverURL: "xxx"})
+	if err != nil {
+		println("write to database failed")
+		return
+	}
+	println(filePath)
+	resp.StatusCode = 0
+	resp.StatusMsg = "success"
+	println(len(req.Data))
 	c.JSON(consts.StatusOK, resp)
 }
 
@@ -37,8 +86,25 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := new(video.DouyinPublishListRequest)
+	resp := new(video.DouyinFavoriteListResponse)
 
+	data, err := dal.Video.Where(dal.Video.UID.Eq(req.UserId)).Find()
+	if err != nil {
+		println("query database failed")
+		return
+	}
+	resp.StatusCode = 0
+	resp.StatusMsg = "success"
+	var v []*video.Video
+	for _,d  := range data {
+		var tmp video.Video
+		tmp.Id = d.Vid
+		tmp.CoverUrl = d.CoverURL
+		tmp.PlayUrl = d.PlayURL
+		// 还有很多没有实现的
+		v = append(v, &tmp)
+	}
+	resp.VideoList = v
 	c.JSON(consts.StatusOK, resp)
 }
 

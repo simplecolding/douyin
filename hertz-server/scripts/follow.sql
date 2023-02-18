@@ -22,13 +22,13 @@ CREATE TABLE `video` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='视频表';
 
 CREATE TABLE `comment` (
-                         `cid` bigint unsigned AUTO_INCREMENT COMMENT '主键',
-                         `vid` bigint not null COMMENT '视频id',
-                         `uid` bigint not null COMMENT '用户id',
-                         `status` tinyint(1) DEFAULT '1' COMMENT '是否删除 1:是  0:否',
-                         `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                         `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                         PRIMARY KEY (`cid`)
+                           `cid` bigint unsigned AUTO_INCREMENT COMMENT '主键',
+                           `vid` bigint not null COMMENT '视频id',
+                           `uid` bigint not null COMMENT '用户id',
+                           `content` varchar(255) not null COMMENT '评论内容，不能超过255字符',
+                           `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                           `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                           PRIMARY KEY (`cid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论表';
 
 CREATE TABLE `favorite` (
