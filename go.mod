@@ -3,7 +3,7 @@ module github.com/simplecolding/douyin
 go 1.17
 
 require (
-	gorm.io/driver/mysql v1.4.6
+	gorm.io/driver/mysql v1.4.7
 	gorm.io/gen v0.3.21
 	gorm.io/gorm v1.24.5
 )
@@ -17,5 +17,5 @@ require (
 	golang.org/x/tools v0.1.12 // indirect
 	gorm.io/datatypes v1.0.7 // indirect
 	gorm.io/hints v1.1.0 // indirect
-	gorm.io/plugin/dbresolver v1.3.0 // indirect
+	gorm.io/plugin/dbresolver v1.4.1 // indirect
 )
