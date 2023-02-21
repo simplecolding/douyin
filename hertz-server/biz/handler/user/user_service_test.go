@@ -23,7 +23,7 @@ func TestUserInfo(t *testing.T) {
 	)
 	resp := w.Result()
 	//assert.DeepEqual(t, 200, resp.StatusCode())
-	println("hhh", string(resp.Body()))
+	println(string(resp.Body()))
 }
 
 func TestUserLogin(t *testing.T) {

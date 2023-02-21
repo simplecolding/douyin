@@ -12,18 +12,11 @@ import (
 	_ "github.com/simplecolding/douyin/hertz-server/biz/orm" //
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
-	"strings"
 )
 
 // UserLogin .
 // @router /douyin/user/login [POST]
 func UserLogin(ctx context.Context, c *app.RequestContext) {
-	println("djfsafhj")
-	username := c.Query("username")
-	password := c.Query("password")
-	reqBody := strings.NewReader("username=" + username + "&password=" + password)
-	c.SetBodyStream(reqBody, reqBody.Len())
-	c.Header("Content-Type", "application/x-www-form-urlencoded")
 	var err error
 	var req user.DouyinUserRegisterRequest
 	err = c.BindAndValidate(&req)
@@ -34,17 +27,17 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	println("username", req.Username)
 
 	mw.Init()
-	mw.JwtMiddleware.LoginHandler(ctx,c)
+	mw.JwtMiddleware.LoginHandler(ctx, c)
 
 	//mw.JwtMiddleware.ParseTokenString()
 	//redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	//defer cancel()
-	resp := new(user.DouyinUserLoginResponse)
-	tk := "hisadfgh"
-	resp.Token = tk
-	//redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
-	//println(redis.RD.Get(ctx, req.Username).Val())
-	c.JSON(consts.StatusOK, resp)
+	//resp := new(user.DouyinUserLoginResponse)
+	//tk := "hisadfgh"
+	//resp.Token = tk
+	////redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
+	////println(redis.RD.Get(ctx, req.Username).Val())
+	//c.JSON(consts.StatusOK, resp)
 }
 
 // UserRegister .
@@ -89,7 +82,7 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 	resp.UserId = userinfo.UID
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
-	c.JSON(consts.StatusOK, resp)
+	c.JSON(0, resp)
 }
 
 // UserInfo .
@@ -102,8 +95,10 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	println(u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+
+	//u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	//println(u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+
 	resp := new(user.DouyinUserResponse)
 	resp.StatusCode = int32(0)
 	resp.StatusMsg = "success"

@@ -64,22 +64,18 @@ func Init() {
 				println(redis.RD.Get(ctx, token).Val())
 			}
 			c.JSON(http.StatusOK, user.DouyinUserLoginResponse{
-				StatusCode: int32(code),
+				StatusCode: int32(0),
 				Token: token,
 				StatusMsg: "success",
 				UserId: u.UID,
 			})
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
-			println("asdofjhh")
 			var req user.DouyinUserLoginRequest
 			err := c.BindAndValidate(&req)
-			println("jjkjkjk")
 			if  err != nil {
 				return nil, err
 			}
-
-
 			users, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(req.Username)).Take()
 			if err != nil {
 				return nil, err

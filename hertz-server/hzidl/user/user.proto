@@ -62,6 +62,6 @@ service UserService {
     option (api.post) = "/douyin/user/register";
   }
   rpc UserInfo(DouyinUserRequest) returns (DouyinUserResponse) {
-    option (api.post) = "/douyin/user";
+    option (api.get) = "/douyin/user";
   }
 }
