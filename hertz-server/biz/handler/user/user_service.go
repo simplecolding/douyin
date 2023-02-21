@@ -12,6 +12,8 @@ import (
 	_ "github.com/simplecolding/douyin/hertz-server/biz/orm" //
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"net/http"
+	"strconv"
 )
 
 // UserLogin .
@@ -24,7 +26,6 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	println("username", req.Username)
 
 	mw.Init()
 	mw.JwtMiddleware.LoginHandler(ctx, c)
@@ -95,12 +96,47 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+	// 注意这里
+	u, _ := c.Get(mw.IdentityKey)
+	println(u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+	//tk := req.Token
+	//jwtToken, err := mw.JwtMiddleware.ParseTokenString(tk)
+	//tmp := jwt.ExtractClaimsFromToken(jwtToken)
+	//tmp[mw.IdentityKey]
 
-	//u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	//println(u.(*mw.Claim).ID, u.(*mw.Claim).Username)
-
+	dal.UserAuth.Where(dal.UserAuth.UID.Eq(u.(*mw.Claim).ID))
+	totalFavorited := int64(0)
+	v, err := dal.Video.Where(dal.Video.UID.Eq(u.(*mw.Claim).ID)).Find()
+	for _,t := range v {
+		tmpcount, _ := dal.Favorite.Where(dal.Favorite.Vid.Eq(t.Vid)).Count()
+		totalFavorited += tmpcount
+	}
+	// 低性能代码
+	workCount, _ := dal.Video.Where(dal.Video.UID.Eq(u.(*mw.Claim).ID)).Count()
+	favoriteCount, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(u.(*mw.Claim).ID)).Count()
+	userInfoDB, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(u.(*mw.Claim).ID)).First()
+	if err != nil {
+		println("database err")
+	}
+	userInfoDB.WorkCount = workCount
+	userInfoDB.FavoriteCount = favoriteCount
+	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited,10)
+	dal.UserAuth.Save(userInfoDB)
 	resp := new(user.DouyinUserResponse)
 	resp.StatusCode = int32(0)
 	resp.StatusMsg = "success"
-	c.JSON(consts.StatusOK, resp)
+	resp.User = &user.User{
+		Id: userInfoDB.UID,
+		Name: userInfoDB.UserName,
+		FollowCount: userInfoDB.FollowCount,
+		IsFollow: userInfoDB.IsFollow,
+		Avatar: userInfoDB.Avatar,
+		BackgroundImage: userInfoDB.BackgroundImage,
+		Signature: userInfoDB.Signature,
+		TotalFavorited: userInfoDB.TotalFavorite,
+		WorkCount: userInfoDB.WorkCount,
+		FavoriteCount: userInfoDB.FavoriteCount,
+	}
+	c.JSON(http.StatusOK, resp)
+	return
 }

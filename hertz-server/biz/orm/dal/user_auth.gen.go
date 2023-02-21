@@ -30,6 +30,15 @@ func newUserAuth(db *gorm.DB, opts ...gen.DOOption) userAuth {
 	_userAuth.UID = field.NewInt64(tableName, "uid")
 	_userAuth.UserName = field.NewString(tableName, "user_name")
 	_userAuth.Password = field.NewString(tableName, "password")
+	_userAuth.FollowCount = field.NewInt64(tableName, "follow_count")
+	_userAuth.FollowerCount = field.NewString(tableName, "follower_count")
+	_userAuth.IsFollow = field.NewBool(tableName, "is_follow")
+	_userAuth.Avatar = field.NewString(tableName, "avatar")
+	_userAuth.BackgroundImage = field.NewString(tableName, "background_image")
+	_userAuth.Signature = field.NewString(tableName, "signature")
+	_userAuth.TotalFavorite = field.NewString(tableName, "total_favorite")
+	_userAuth.WorkCount = field.NewInt64(tableName, "work_count")
+	_userAuth.FavoriteCount = field.NewInt64(tableName, "favorite_count")
 	_userAuth.Status = field.NewBool(tableName, "status")
 	_userAuth.CreatedAt = field.NewTime(tableName, "created_at")
 	_userAuth.UpdatedAt = field.NewTime(tableName, "updated_at")
@@ -42,13 +51,22 @@ func newUserAuth(db *gorm.DB, opts ...gen.DOOption) userAuth {
 type userAuth struct {
 	userAuthDo
 
-	ALL       field.Asterisk
-	UID       field.Int64
-	UserName  field.String
-	Password  field.String
-	Status    field.Bool
-	CreatedAt field.Time
-	UpdatedAt field.Time
+	ALL             field.Asterisk
+	UID             field.Int64
+	UserName        field.String
+	Password        field.String
+	FollowCount     field.Int64
+	FollowerCount   field.String
+	IsFollow        field.Bool
+	Avatar          field.String
+	BackgroundImage field.String
+	Signature       field.String
+	TotalFavorite   field.String
+	WorkCount       field.Int64
+	FavoriteCount   field.Int64
+	Status          field.Bool
+	CreatedAt       field.Time
+	UpdatedAt       field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -68,6 +86,15 @@ func (u *userAuth) updateTableName(table string) *userAuth {
 	u.UID = field.NewInt64(table, "uid")
 	u.UserName = field.NewString(table, "user_name")
 	u.Password = field.NewString(table, "password")
+	u.FollowCount = field.NewInt64(table, "follow_count")
+	u.FollowerCount = field.NewString(table, "follower_count")
+	u.IsFollow = field.NewBool(table, "is_follow")
+	u.Avatar = field.NewString(table, "avatar")
+	u.BackgroundImage = field.NewString(table, "background_image")
+	u.Signature = field.NewString(table, "signature")
+	u.TotalFavorite = field.NewString(table, "total_favorite")
+	u.WorkCount = field.NewInt64(table, "work_count")
+	u.FavoriteCount = field.NewInt64(table, "favorite_count")
 	u.Status = field.NewBool(table, "status")
 	u.CreatedAt = field.NewTime(table, "created_at")
 	u.UpdatedAt = field.NewTime(table, "updated_at")
@@ -87,10 +114,19 @@ func (u *userAuth) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *userAuth) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 6)
+	u.fieldMap = make(map[string]field.Expr, 15)
 	u.fieldMap["uid"] = u.UID
 	u.fieldMap["user_name"] = u.UserName
 	u.fieldMap["password"] = u.Password
+	u.fieldMap["follow_count"] = u.FollowCount
+	u.fieldMap["follower_count"] = u.FollowerCount
+	u.fieldMap["is_follow"] = u.IsFollow
+	u.fieldMap["avatar"] = u.Avatar
+	u.fieldMap["background_image"] = u.BackgroundImage
+	u.fieldMap["signature"] = u.Signature
+	u.fieldMap["total_favorite"] = u.TotalFavorite
+	u.fieldMap["work_count"] = u.WorkCount
+	u.fieldMap["favorite_count"] = u.FavoriteCount
 	u.fieldMap["status"] = u.Status
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt

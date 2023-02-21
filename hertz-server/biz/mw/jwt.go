@@ -19,9 +19,8 @@ package mw
 import (
 	"context"
 	"errors"
-	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
-
 	"github.com/simplecolding/douyin/hertz-server/biz/model/hertz/user"
+	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/redis"
 	"net/http"
 	"time"
@@ -61,7 +60,7 @@ func Init() {
 			if code == 200 {
 				// store to redis
 				redis.RD.Set(ctx, token, u.UID,0)
-				println(redis.RD.Get(ctx, token).Val())
+				println(req.Username,",id:",redis.RD.Get(ctx, token).Val() + "login++++++++++++++++++++++")
 			}
 			c.JSON(http.StatusOK, user.DouyinUserLoginResponse{
 				StatusCode: int32(0),

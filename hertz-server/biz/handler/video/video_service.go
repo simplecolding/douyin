@@ -20,24 +20,31 @@ import (
 // VideoPublish .
 // @router /douyin/publish/action [POST]
 func VideoPublish(ctx context.Context, c *app.RequestContext) {
+	println("fsdasfdd")
 	//req.Data type : bytes
 	var err error
 	var req video.DouyinPublishActionRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
+		println("asdffadasdffasd",err)
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-
+	//req.Token, err = c.Get("token")
 	resp := new(video.DouyinPublishActionResponse)
-
 	// jwt授权，从token中获取uid
-	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	u, _ := c.Get(mw.IdentityKey)
 	println("video:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
-
+	//tk := req.Token
+	//jwtToken, err := mw.JwtMiddleware.ParseTokenString(tk)
+	//tmp := jwt.ExtractClaimsFromToken(jwtToken)
 	// 检查文件类型
 	fileType := http.DetectContentType(req.Data)
 	userName := u.(*mw.Claim).Username
+	if len(userName) == 0 {
+		c.String(consts.StatusBadRequest, err.Error())
+		return
+	}
 	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
 	//fileEndings, err := mime.ExtensionsByType(fileType)
 	if err != nil {
@@ -52,7 +59,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		println("video incorrect")
 		return
 	}
-	filePath := filepath.Join("../../public", fileName+".mp4")
+	filePath := filepath.Join("./biz/public", fileName+".mp4")
 	newFile, err := os.Create(filePath)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
@@ -60,29 +67,13 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	defer newFile.Close()
-	/*
->>>>>>> refs/remotes/origin/main
-	for i := 0; i < 10; i++ {
-		req.Data = append(req.Data, byte(i))
-	}
-	req.Data = append(req.Data, 1)
-<<<<<<< HEAD
-	if _, err := newFile.Write(req.Data); err != nil {
-		println("write file failed")
-		return
-	}
-	playUrl := "127.0.0.1/public" + fileName + ".mp4"
-	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: u.(*mw.Claim).ID, PlayURL: playUrl, CoverURL: "xxx"})
-	if err != nil {
-=======
-	*/
 	if _, err := newFile.Write(req.Data); err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		println("write file failed")
 		return
 	}
-	
-	playUrl := "127.0.0.1/public" + fileName + ".mp4"
+
+	playUrl := "http://127.0.0.1/public" + fileName + ".mp4"
 	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: u.(*mw.Claim).ID, PlayURL: playUrl, CoverURL: "coverUrl"})
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
