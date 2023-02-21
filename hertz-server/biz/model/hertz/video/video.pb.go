@@ -28,11 +28,17 @@ type User struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id            int64  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" form:"id" query:"id"`                                                                    // 用户id
-	Name          string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" form:"name" query:"name"`                                                             // 用户名称
-	FollowCount   int64  `protobuf:"varint,3,opt,name=follow_count,json=followCount,proto3" json:"follow_count,omitempty" form:"follow_count" query:"follow_count"`           // 关注总数
-	FollowerCount int64  `protobuf:"varint,4,opt,name=follower_count,json=followerCount,proto3" json:"follower_count,omitempty" form:"follower_count" query:"follower_count"` // 粉丝总数
-	IsFollow      bool   `protobuf:"varint,5,opt,name=is_follow,json=isFollow,proto3" json:"is_follow,omitempty" form:"is_follow" query:"is_follow"`                          // true-已关注，false-未关注
+	Id              int64  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty" form:"id" query:"id"`                                                                             // 用户id
+	Name            string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" form:"name" query:"name"`                                                                      // 用户名称
+	FollowCount     int64  `protobuf:"varint,3,opt,name=follow_count,json=followCount,proto3" json:"follow_count,omitempty" form:"follow_count" query:"follow_count"`                    // 关注总数
+	FollowerCount   int64  `protobuf:"varint,4,opt,name=follower_count,json=followerCount,proto3" json:"follower_count,omitempty" form:"follower_count" query:"follower_count"`          // 粉丝总数
+	IsFollow        bool   `protobuf:"varint,5,opt,name=is_follow,json=isFollow,proto3" json:"is_follow,omitempty" form:"is_follow" query:"is_follow"`                                   // true-已关注，false-未关注
+	Avatar          string `protobuf:"bytes,6,opt,name=avatar,proto3" json:"avatar,omitempty" form:"avatar" query:"avatar"`                                                              // 用户头像路径
+	BackgroundImage string `protobuf:"bytes,7,opt,name=background_image,json=backgroundImage,proto3" json:"background_image,omitempty" form:"background_image" query:"background_image"` // 用户个人页页部大图
+	Signature       string `protobuf:"bytes,8,opt,name=signature,proto3" json:"signature,omitempty" form:"signature" query:"signature"`                                                  // 个人简介
+	TotalFavorited  string `protobuf:"bytes,9,opt,name=total_favorited,json=totalFavorited,proto3" json:"total_favorited,omitempty" form:"total_favorited" query:"total_favorited"`      // 获赞数量
+	WorkCount       int64  `protobuf:"varint,10,opt,name=work_count,json=workCount,proto3" json:"work_count,omitempty" form:"work_count" query:"work_count"`                             // 作品数
+	FavoriteCount   int64  `protobuf:"varint,11,opt,name=favorite_count,json=favoriteCount,proto3" json:"favorite_count,omitempty" form:"favorite_count" query:"favorite_count"`         // 喜欢数
 }
 
 func (x *User) Reset() {

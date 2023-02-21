@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -27,7 +26,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	//req.Data type : bytes
 	var err error
 	var r video.PublishActionRequest
-	var req video.DouyinPublishActionRequest
+	// var req video.DouyinPublishActionRequest
 	var resp video.DouyinPublishActionResponse
 	var byteContainer []byte
 	err = c.BindAndValidate(&r)
@@ -69,34 +68,42 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	//req.Token, err = c.Get("token")
 	// resp := new(video.DouyinPublishActionResponse)
 	// jwt授权，从token中获取uid
-	fmt.Println("get uid:", mw.IdentityKey)
-	u, _ := c.Get(mw.IdentityKey)
-	println("video:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+	fmt.Println("get uid:", mw.JwtMiddleware.IdentityKey)
+
+	// !!!!
+	// todo 这里mw会报错
+	// u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	// println("video:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
 
 	//tk := req.Token
 	//jwtToken, err := mw.JwtMiddleware.ParseTokenString(tk)
 	//tmp := jwt.ExtractClaimsFromToken(jwtToken)
 	// 检查文件类型
-	fileType := http.DetectContentType(req.Data)
-	userName := u.(*mw.Claim).Username
-	if len(userName) == 0 {
-		c.String(consts.StatusBadRequest, err.Error())
-		return
-	}
-	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
+	// fileType := http.DetectContentType(req.Data)
+
+	// userName := u.(*mw.Claim).Username
+	// if len(userName) == 0 {
+	// 	c.String(consts.StatusBadRequest, err.Error())
+	// 	return
+	// }
+
+	// TEST
+	fileName := strconv.FormatInt(time.Now().Unix(), 10) + "userName"
 	//fileEndings, err := mime.ExtensionsByType(fileType)
 	if err != nil {
 		println("get filetype failed")
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	if fileType != "video/mp4" {
-		resp.StatusCode = int32(1)
-		resp.StatusMsg = "video type incorrect"
-		c.JSON(consts.StatusOK, resp)
-		println("video incorrect")
-		return
-	}
+
+	// if fileType != "video/mp4" {
+	// 	resp.StatusCode = int32(1)
+	// 	resp.StatusMsg = "video type incorrect"
+	// 	c.JSON(consts.StatusOK, resp)
+	// 	println("video incorrect, type is ", fileType)
+	// 	return
+	// }
+
 	filePath := filepath.Join("./biz/public", fileName+".mp4")
 	newFile, err := os.Create(filePath)
 	if err != nil {
@@ -105,14 +112,16 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	defer newFile.Close()
-	if _, err := newFile.Write(req.Data); err != nil {
+	if _, err := newFile.Write(byteContainer); err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		println("write file failed")
 		return
 	}
 
-	playUrl := "http://127.0.0.1/public" + fileName + ".mp4"
-	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: u.(*mw.Claim).ID, PlayURL: playUrl, CoverURL: "coverUrl"})
+	playUrl := "http://43.139.145.135:7777/public" + fileName + ".mp4"
+	println("playUrl: ", playUrl)
+	// test
+	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: 1, PlayURL: playUrl, CoverURL: "coverUrl"})
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		println("write to database failed")
@@ -121,7 +130,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	println(filePath)
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
-	println(len(req.Data))
+	// println(len(req.Data))
 	c.JSON(consts.StatusOK, resp)
 }
 

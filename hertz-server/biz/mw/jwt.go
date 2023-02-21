@@ -19,11 +19,12 @@ package mw
 import (
 	"context"
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/simplecolding/douyin/hertz-server/biz/model/hertz/user"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/redis"
-	"net/http"
-	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
@@ -35,16 +36,18 @@ var (
 	JwtMiddleware *jwt.HertzJWTMiddleware
 	IdentityKey   = "claim"
 )
+
 type Claim struct {
 	ID       int64
 	Username string
 }
+
 func Init() {
 	var err error
 	authMiddleware, err := jwt.New(&jwt.HertzJWTMiddleware{
 		Realm:         "test zone",
 		Key:           []byte("secret key"),
-		Timeout:       10*time.Hour,
+		Timeout:       10 * time.Hour,
 		MaxRefresh:    time.Hour,
 		TokenLookup:   "header: Authorization, query: token, cookie: jwt",
 		TokenHeadName: "Bearer",
@@ -59,20 +62,20 @@ func Init() {
 			}
 			if code == 200 {
 				// store to redis
-				redis.RD.Set(ctx, token, u.UID,0)
-				println(req.Username,",id:",redis.RD.Get(ctx, token).Val() + "login++++++++++++++++++++++")
+				redis.RD.Set(ctx, token, u.UID, 0)
+				println(req.Username, ",id:", redis.RD.Get(ctx, token).Val()+"login++++++++++++++++++++++")
 			}
 			c.JSON(http.StatusOK, user.DouyinUserLoginResponse{
 				StatusCode: int32(0),
-				Token: token,
-				StatusMsg: "success",
-				UserId: u.UID,
+				Token:      token,
+				StatusMsg:  "success",
+				UserId:     u.UID,
 			})
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
 			var req user.DouyinUserLoginRequest
 			err := c.BindAndValidate(&req)
-			if  err != nil {
+			if err != nil {
 				return nil, err
 			}
 			users, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(req.Username)).Take()
@@ -83,7 +86,7 @@ func Init() {
 				return nil, errors.New("wrong password")
 			}
 
-			return Claim{ID: users.UID,Username: users.UserName}, nil
+			return Claim{ID: users.UID, Username: users.UserName}, nil
 		},
 		IdentityKey: IdentityKey,
 		IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
