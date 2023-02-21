@@ -14,8 +14,8 @@ message User {
 }
 
 message DouyinUserLoginRequest {
-  string username = 1 [(api.body) = "username", (api.form) = "username", (api.vd) = "(len($) > 0 && len($) < 100)"];// 登录用户名
-  string password = 2 [(api.body) = "password", (api.form) = "password", (api.vd) = "(len($) > 6 && len($) < 10)"];// 登录密码
+  string username = 1 ;// 登录用户名
+  string password = 2 ;// 登录密码
 }
 
 message DouyinUserLoginResponse {
@@ -56,6 +56,6 @@ service UserService {
     option (api.post) = "/douyin/user/register";
   }
   rpc UserInfo(DouyinUserRequest) returns (DouyinUserResponse) {
-    option (api.post) = "/douyin/user";
+    option (api.get) = "/douyin/user";
   }
 }

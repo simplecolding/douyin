@@ -1,48 +1,78 @@
 package user
 
 import (
-	"context"
-	"github.com/cloudwego/hertz/pkg/app"
+	"encoding/base64"
+	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/common/ut"
+	"math/rand"
+	"strings"
 	"testing"
+	"time"
 )
 
-func TestUserLogin(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		c   *app.RequestContext
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-		{
+func TestUserInfo(t *testing.T) {
+	h := server.Default()
+	h.GET("/douyin/user", UserLogin)
+	url := "/douyin/user"
+	method := "GET"
+	w := ut.PerformRequest(h.Engine,
+		method,
+		url,
+		nil,
+		ut.Header{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbSI6eyJJRCI6MTUsIlVzZXJuYW1lIjoiYWFhYWFhYSJ9LCJleHAiOjE2NzY5MzEwMDMsIm9yaWdfaWF0IjoxNjc2ODk1MDAzfQ.GpzZpgut83PAKHbOPwDCELN3IwJQFixjxPOKn0kGPOQ"},
+	)
+	resp := w.Result()
+	//assert.DeepEqual(t, 200, resp.StatusCode())
+	println("hhh", string(resp.Body()))
+}
 
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-		})
-	}
+func TestUserLogin(t *testing.T) {
+	// jwt鉴权
+	//mw.Init()
+	h := server.Default()
+	h.POST("/douyin/user/login", UserLogin)
+	//username := "aaaaaaaa"
+	//reqBody := strings.NewReader("username=" + username + "&password=aaaaaaa")
+	url := "/douyin/user/login?username=aaaaaaa&password=aaaaaaa"
+	method := "POST"
+	w := ut.PerformRequest(h.Engine,
+		method,
+		url,
+		//&ut.Body{reqBody,reqBody.Len()},
+		nil,
+		ut.Header{"Content-Type", "application/x-www-form-urlencoded"},
+	)
+	resp := w.Result()
+	//assert.DeepEqual(t, 200, resp.StatusCode())
+	println("resp", string(resp.Body()))
 }
 
 func TestUserRegister(t *testing.T) {
-	type args struct {
-		ctx context.Context
-		c   *app.RequestContext
+	h := server.Default()
+	h.POST("/douyin/user/register", UserRegister)
+	rand.Seed(time.Now().UnixNano())
+	username, _ := GenerateRandomString(8)
+	reqBody := strings.NewReader("username=" + username + "&password=aaaaaaa")
+	url := "/douyin/user/register"
+	method := "POST"
+	w := ut.PerformRequest(h.Engine,
+		method,
+		url,
+		&ut.Body{reqBody,reqBody.Len()},
+		ut.Header{"Content-Type", "application/x-www-form-urlencoded"},
+	)
+	resp := w.Result()
+	//assert.DeepEqual(t, 200, resp.StatusCode())
+	println(string(resp.Body()))
+	//assert.DeepEqual(t, "{\"message\":\"pong\"}", string(resp.Body()))
+}
+func GenerateRandomString(n int) (string, error) {
+	// 生成随机字节数组
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
 	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-		{
-			name:"t1",
-			args: args{ctx: context.Background(), },
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-		})
-	}
+	// 对字节数组进行Base64编码
+	return base64.URLEncoding.EncodeToString(b)[:n], nil
 }

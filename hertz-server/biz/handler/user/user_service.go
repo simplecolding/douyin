@@ -12,28 +12,39 @@ import (
 	_ "github.com/simplecolding/douyin/hertz-server/biz/orm" //
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"strings"
 )
 
 // UserLogin .
 // @router /douyin/user/login [POST]
 func UserLogin(ctx context.Context, c *app.RequestContext) {
+	println("djfsafhj")
+	username := c.Query("username")
+	password := c.Query("password")
+	reqBody := strings.NewReader("username=" + username + "&password=" + password)
+	c.SetBodyStream(reqBody, reqBody.Len())
+	c.Header("Content-Type", "application/x-www-form-urlencoded")
 	var err error
-	var req user.DouyinUserLoginRequest
+	var req user.DouyinUserRegisterRequest
 	err = c.BindAndValidate(&req)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	mw.JwtMiddleware.LoginHandler(ctx, c)
-	//println(mw.JwtMiddleware.GetClaimsFromJWT(ctx, c))
+	println("username", req.Username)
+
+	mw.Init()
+	mw.JwtMiddleware.LoginHandler(ctx,c)
+
+	//mw.JwtMiddleware.ParseTokenString()
 	//redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 	//defer cancel()
-	//resp := new(user.DouyinUserLoginResponse)
-	//tk := "hisadfgh"
-	//resp.Token = tk
+	resp := new(user.DouyinUserLoginResponse)
+	tk := "hisadfgh"
+	resp.Token = tk
 	//redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
 	//println(redis.RD.Get(ctx, req.Username).Val())
-	//c.JSON(consts.StatusOK, resp)
+	c.JSON(consts.StatusOK, resp)
 }
 
 // UserRegister .
@@ -47,8 +58,15 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+
 	username := req.Username
 	password := req.Password
+	if len(username) < 6 || len(password) < 6 {
+		resp.StatusCode = 1
+		resp.StatusMsg = "username must gt 6 and password must gt 6!!!"
+		c.JSON(consts.StatusOK, resp)
+		return
+	}
 	// query
 	u, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(username)).First()
 	if u != nil {
@@ -57,7 +75,6 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 		resp.StatusMsg = "failed!  username已存在！！！" + username
 		c.JSON(consts.StatusOK, resp)
 		return
-		//panic(fmt.Errorf("username已存在"))
 	}
 	userinfo := model.UserAuth{UserName: username, Password: password}
 	err = dal.UserAuth.Create(&userinfo)
@@ -67,17 +84,9 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 		resp.StatusMsg = "failed!  插入失败！！！"
 		c.JSON(consts.StatusOK, resp)
 		return
-		//panic(fmt.Errorf("插入失败！！！"))
 	}
-	u, err = dal.UserAuth.Where(dal.UserAuth.UserName.Eq(username)).First()
-	if err != nil {
-		resp.UserId = -1
-		resp.StatusCode = 1
-		resp.StatusMsg = "failed!  插入失败！！！"
-		c.JSON(consts.StatusOK, resp)
-		return
-	}
-	resp.UserId = u.UID
+
+	resp.UserId = userinfo.UID
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
 	c.JSON(consts.StatusOK, resp)
@@ -94,7 +103,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	println(u.(*mw.Claim).ID,u.(*mw.Claim).Username)
+	println(u.(*mw.Claim).ID, u.(*mw.Claim).Username)
 	resp := new(user.DouyinUserResponse)
 	resp.StatusCode = int32(0)
 	resp.StatusMsg = "success"

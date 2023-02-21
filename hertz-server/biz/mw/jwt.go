@@ -40,9 +40,9 @@ type Claim struct {
 	ID       int64
 	Username string
 }
-func InitJwt() {
+func Init() {
 	var err error
-	JwtMiddleware, err = jwt.New(&jwt.HertzJWTMiddleware{
+	authMiddleware, err := jwt.New(&jwt.HertzJWTMiddleware{
 		Realm:         "test zone",
 		Key:           []byte("secret key"),
 		Timeout:       10*time.Hour,
@@ -71,10 +71,15 @@ func InitJwt() {
 			})
 		},
 		Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
+			println("asdofjhh")
 			var req user.DouyinUserLoginRequest
-			if err := c.BindAndValidate(&req); err != nil {
+			err := c.BindAndValidate(&req)
+			println("jjkjkjk")
+			if  err != nil {
 				return nil, err
 			}
+
+
 			users, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(req.Username)).Take()
 			if err != nil {
 				return nil, err
@@ -114,8 +119,8 @@ func InitJwt() {
 			})
 		},
 	})
-	JwtMiddleware.MiddlewareInit()
 	if err != nil {
 		panic(err)
 	}
+	JwtMiddleware = authMiddleware
 }

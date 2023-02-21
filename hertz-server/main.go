@@ -10,7 +10,7 @@ import (
 func main() {
 	h := server.Default()
 	// jwt鉴权
-	mw.InitJwt()
+	mw.Init()
 	// 静态资源访问
 	h.Static("/public","./biz")
 	register(h)

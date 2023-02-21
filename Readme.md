@@ -23,13 +23,20 @@
 
 ```golang
 func main() {
-	h := server.Default()
-	// jwt鉴权
-	mw.InitJwt()
-	// 静态资源访问
-	h.Static("/public","./biz")
-	register(h)
-	h.Spin()
+    h := server.Default()
+    // jwt鉴权
+    mw.Init()
+    // 静态资源访问
+    h.Static("/public","./biz")
+    register(h)
+    h.Spin()
 }
+
+```
+
+```shell
+# 更新用户相关脚手架
+cd xx/hertz-server
+hz update -I ./hzidl -idl hzidl/user/user.proto -module github.com/simplecolding/douyin/hertz-server
 
 ```
