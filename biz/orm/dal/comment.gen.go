@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"github.com/simplecolding/douyin/biz/biz/orm/model"
 )
 
 func newComment(db *gorm.DB, opts ...gen.DOOption) comment {
@@ -43,12 +43,12 @@ type comment struct {
 	commentDo
 
 	ALL       field.Asterisk
-	Cid       field.Int64
-	Vid       field.Int64
-	UID       field.Int64
-	Content   field.String
-	CreatedAt field.Time
-	UpdatedAt field.Time
+	Cid       field.Int64  // 主键
+	Vid       field.Int64  // 视频id
+	UID       field.Int64  // 用户id
+	Content   field.String // 评论内容，不能超过255字符
+	CreatedAt field.Time   // 创建时间
+	UpdatedAt field.Time   // 更新时间
 
 	fieldMap map[string]field.Expr
 }

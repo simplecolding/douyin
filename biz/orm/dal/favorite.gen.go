@@ -6,7 +6,6 @@ package dal
 
 import (
 	"context"
-	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"github.com/simplecolding/douyin/biz/biz/orm/model"
 )
 
 func newFavorite(db *gorm.DB, opts ...gen.DOOption) favorite {
@@ -44,12 +43,12 @@ type favorite struct {
 	favoriteDo
 
 	ALL       field.Asterisk
-	Lid       field.Int64
-	Vid       field.Int64
-	UID       field.Int64
-	Status    field.Bool
-	CreatedAt field.Time
-	UpdatedAt field.Time
+	Lid       field.Int64 // 主键
+	Vid       field.Int64 // 视频id
+	UID       field.Int64 // 用户id
+	Status    field.Bool  // 是否删除 1:是  0:否
+	CreatedAt field.Time  // 创建时间
+	UpdatedAt field.Time  // 更新时间
 
 	fieldMap map[string]field.Expr
 }
@@ -168,27 +167,6 @@ type IFavoriteDo interface {
 	Returning(value interface{}, columns ...string) IFavoriteDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
-
-	FilterWithVidAndUid(vid int64, uid int64) (result []model.Favorite, err error)
-}
-
-// FilterWithVidAndUid SELECT * FROM @@table WHERE vid = @vid{{if uid !=-1}} AND uid = @uid{{end}}
-func (f favoriteDo) FilterWithVidAndUid(vid int64, uid int64) (result []model.Favorite, err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, vid)
-	generateSQL.WriteString("SELECT * FROM favorite WHERE vid = ? ")
-	if uid != -1 {
-		params = append(params, uid)
-		generateSQL.WriteString("AND uid = ? ")
-	}
-
-	var executeSQL *gorm.DB
-	executeSQL = f.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
 }
 
 func (f favoriteDo) Debug() IFavoriteDo {

@@ -7,11 +7,13 @@
 package video
 
 import (
+	"mime/multipart"
+	reflect "reflect"
+	sync "sync"
+
 	_ "github.com/simplecolding/douyin/hertz-server/biz/model/api"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	reflect "reflect"
-	sync "sync"
 )
 
 const (
@@ -211,6 +213,16 @@ type DouyinPublishActionRequest struct {
 	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty" form:"token" query:"token"` // 用户鉴权token
 	Data  []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty" form:"data" query:"data"`     // 视频数据
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty" form:"title" query:"title"` // 视频标题
+}
+
+type PublishActionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Token string                `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty" form:"token" query:"token"` // 用户鉴权token
+	Data  *multipart.FileHeader `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty" form:"data" query:"data"`     // 视频数据
+	Title string                `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty" form:"title" query:"title"` // 视频标题
 }
 
 func (x *DouyinPublishActionRequest) Reset() {

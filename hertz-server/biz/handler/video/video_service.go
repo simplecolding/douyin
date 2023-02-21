@@ -4,17 +4,20 @@ package video
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	video "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/video"
 	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"time"
 )
 
 // VideoPublish .
@@ -23,18 +26,53 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	println("fsdasfdd")
 	//req.Data type : bytes
 	var err error
+	var r video.PublishActionRequest
 	var req video.DouyinPublishActionRequest
-	err = c.BindAndValidate(&req)
+	var resp video.DouyinPublishActionResponse
+	var byteContainer []byte
+	err = c.BindAndValidate(&r)
 	if err != nil {
-		println("asdffadasdffasd",err)
+		fmt.Println("err in bind", err)
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+	println(r.Data)
+	// 将*multipart.FileHeader转为byte[]
+	file := r.Data
+	fileContent, _ := file.Open()
+	// defer file.Close()
+	byteContainer, err = ioutil.ReadAll(fileContent)
+	if err != nil {
+		fmt.Println("err in read file, err: ", err)
+		c.String(consts.StatusBadRequest, err.Error())
+	}
+	fmt.Println("len(data): ", len(byteContainer))
+
+	// r := bufio.NewReader(file)
+	// for {
+	// 	buf := make([]byte, 4*1024)
+	// 	n, err := r.Read(buf)
+	// 	buf = buf[:n]
+	// 	if n == 0 {
+	// 		if err == io.EOF {
+	// 			break
+	// 		}
+	// 		if err != nil {
+	// 			fmt.Println("err in read file, err: ", err)
+	// 			c.String(consts.StatusBadRequest, err.Error())
+	// 		}
+	// 	}
+	// }
+	// c.SetFormValues("data", byteContainer)
+	// err = c.BindAndValidate(&req)
+
 	//req.Token, err = c.Get("token")
-	resp := new(video.DouyinPublishActionResponse)
+	// resp := new(video.DouyinPublishActionResponse)
 	// jwt授权，从token中获取uid
+	fmt.Println("get uid:", mw.IdentityKey)
 	u, _ := c.Get(mw.IdentityKey)
 	println("video:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+
 	//tk := req.Token
 	//jwtToken, err := mw.JwtMiddleware.ParseTokenString(tk)
 	//tmp := jwt.ExtractClaimsFromToken(jwtToken)
@@ -111,7 +149,7 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
 	var v []*video.Video
-	for _,d  := range data {
+	for _, d := range data {
 		var tmp video.Video
 		tmp.Id = d.Vid
 		tmp.CoverUrl = d.CoverURL
@@ -137,7 +175,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	resp := new(video.DouyinFeedResponse)
 	// todo
 	// 30 videos for a single time
-	limit := 30 
+	limit := 30
 	// data, err := dal.Video.Order("created_at desc").Limit(limit).Find()
 	data, err := dal.Video.Limit(limit).Find()
 	if err != nil {
@@ -147,7 +185,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
 	var v []*video.Video
-	for _,d  := range data {
+	for _, d := range data {
 		var tmp video.Video
 		tmp.Id = d.Vid
 		tmp.CoverUrl = d.CoverURL
