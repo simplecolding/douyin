@@ -7,9 +7,9 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	comment "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/comment"
-	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 )
 
 // CommentAction .
@@ -23,12 +23,15 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	resp := new(comment.DouyinCommentActionResponse)
-	// jwt授权，从token中获取uid
-	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	println("comment:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+	// 鉴权
+	flag, userName ,uid := utils.Auth(ctx,req.Token)
+	if !flag {
+		c.JSON(consts.StatusBadRequest, "token错误")
+		return
+	}
 	action := req.ActionType
 	if action == 1 {
-		dal.Comment.Create(&model.Comment{UID: u.(*mw.Claim).ID, Vid: req.VideoId, Content: req.CommentText})
+		dal.Comment.Create(&model.Comment{UID: uid, Vid: req.VideoId, Content: userName+":"+req.CommentText})
 	} else {
 		cid := req.CommentId
 		dal.Comment.Delete(&model.Comment{Cid: cid})
