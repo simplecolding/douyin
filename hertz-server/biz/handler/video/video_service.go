@@ -10,6 +10,7 @@ import (
 	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,38 +21,47 @@ import (
 // VideoPublish .
 // @router /douyin/publish/action [POST]
 func VideoPublish(ctx context.Context, c *app.RequestContext) {
-	println("fsdasfdd")
 	//req.Data type : bytes
 	var err error
 	var req video.DouyinPublishActionRequest
 	err = c.BindAndValidate(&req)
-	if err != nil {
-		println("asdffadasdffasd",err)
-		c.String(consts.StatusBadRequest, err.Error())
-		return
-	}
-	//req.Token, err = c.Get("token")
+	//if err != nil {
+	//	c.String(consts.StatusBadRequest, err.Error())
+	//	return
+	//}
+	println(req.Token)
+	println(len(req.Data))
 	resp := new(video.DouyinPublishActionResponse)
+	bodyStream := c.RequestBodyStream()
+	p := make([]byte, c.Request.Header.ContentLength())
+	r, err := bodyStream.Read(p)
+	if err != nil {
+		panic(err)
+	}
+	left, _ := ioutil.ReadAll(bodyStream)
+	println(left,r)
 	// jwt授权，从token中获取uid
-	u, _ := c.Get(mw.IdentityKey)
+	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+
 	println("video:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
-	//tk := req.Token
-	//jwtToken, err := mw.JwtMiddleware.ParseTokenString(tk)
-	//tmp := jwt.ExtractClaimsFromToken(jwtToken)
 	// 检查文件类型
 	fileType := http.DetectContentType(req.Data)
 	userName := u.(*mw.Claim).Username
-	if len(userName) == 0 {
-		c.String(consts.StatusBadRequest, err.Error())
-		return
-	}
 	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
 	//fileEndings, err := mime.ExtensionsByType(fileType)
 	if err != nil {
 		println("get filetype failed")
-		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+	if fileType != "video/mp4" {
+		println("video incorrect")
+	}
+	//filePath := filepath.Join("/home/demo/GolandProjects/douyin/hertz-server/biz/public", fileName+".mp4")
+	//newFile, err := os.Create(filePath)
+	//if err != nil {
+	//	c.String(consts.StatusBadRequest, err.Error())
+	//	return
+	//}
 	if fileType != "video/mp4" {
 		resp.StatusCode = int32(1)
 		resp.StatusMsg = "video type incorrect"
@@ -59,7 +69,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		println("video incorrect")
 		return
 	}
-	filePath := filepath.Join("./biz/public", fileName+".mp4")
+	filePath := filepath.Join("../../public", fileName+".mp4")
 	newFile, err := os.Create(filePath)
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
@@ -73,7 +83,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	playUrl := "http://127.0.0.1/public" + fileName + ".mp4"
+	playUrl := "127.0.0.1/public" + fileName + ".mp4"
 	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: u.(*mw.Claim).ID, PlayURL: playUrl, CoverURL: "coverUrl"})
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
@@ -97,6 +107,7 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+
 	// jwt授权，从token中获取uid
 	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
 	println("video list:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)

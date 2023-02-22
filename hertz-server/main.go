@@ -9,6 +9,7 @@ import (
 
 func main() {
 	h := server.Default()
+
 	// jwt鉴权
 	mw.Init()
 	// 静态资源访问
