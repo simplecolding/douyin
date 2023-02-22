@@ -50,6 +50,15 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 	}
 
+	// var input bytes.Buffer
+	// gzipWriter := gzip.NewWriter(&input)
+	// defer gzipWriter.Close()
+	// if err != nil {
+	// 	c.JSON(consts.StatusBadRequest, err.Error())
+	// 	println("gzip failed")
+	// 	return
+	// }
+	// gzipWriter.Write(byteContainer)
 	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
 	if err != nil {
 		println("get filetype failed")
@@ -74,7 +83,10 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	println("playUrl: ", playUrl)
 	// title := "test"
 	// test
-	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL})
+	var cstSh, _ = time.LoadLocation("Asia/Shanghai")
+	t := time.Now().In(cstSh)
+	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL,
+		CreatedAt: t})
 
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
@@ -153,7 +165,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	// 30 videos for a single time
 	limit := 30
 	// Not test
-	data, err := dal.Video.Order(dal.Video.UpdatedAt.Desc()).Limit(limit).Find()
+	data, err := dal.Video.Order(dal.Video.CreatedAt.Desc()).Limit(limit).Find()
 	if err != nil {
 		println("query database failed")
 		return
@@ -167,6 +179,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		tmp.CoverUrl = d.CoverURL
 		tmp.PlayUrl = d.PlayURL
 		v = append(v, &tmp)
+		fmt.Println("video: ", d)
 	}
 	resp.VideoList = v
 	c.JSON(consts.StatusOK, resp)
