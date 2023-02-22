@@ -153,7 +153,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	// 30 videos for a single time
 	limit := 30
 	// Not test
-	data, err := dal.Video.Order(dal.Video.UpdatedAt).Limit(limit).Find()
+	data, err := dal.Video.Order(dal.Video.UpdatedAt.Desc()).Limit(limit).Find()
 	if err != nil {
 		println("query database failed")
 		return

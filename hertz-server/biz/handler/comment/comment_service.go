@@ -70,7 +70,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(comment.DouyinCommentListResponse)
-	data, err := dal.Comment.Where(dal.Comment.Vid.Eq(req.VideoId)).Order(dal.Comment.UpdatedAt).Find()
+	data, err := dal.Comment.Where(dal.Comment.Vid.Eq(req.VideoId)).Order(dal.Comment.UpdatedAt.Desc()).Find()
 	var commentList []*comment.Comment
 	if err != nil {
 		resp.StatusCode = 1
@@ -87,7 +87,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		v.Id = d.Cid
 		v.Content = d.Content
 		// 评论发布日期，格式 mm-dd
-		v.CreateDate = d.CreatedAt.Format("12-12")
+		v.CreateDate = d.CreatedAt.String()
 		userInfoDatabase, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(d.UID)).Find()
 		if err != nil {
 			continue
@@ -98,6 +98,8 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 			userInfo.Name = t.UserName
 		}
 		v.User = &userInfo
+
+		fmt.Println(v)
 		commentList = append(commentList, &v)
 	}
 	resp.CommentList = commentList
