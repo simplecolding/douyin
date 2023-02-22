@@ -4,6 +4,9 @@ package user
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	user "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/user"
@@ -12,8 +15,6 @@ import (
 	_ "github.com/simplecolding/douyin/hertz-server/biz/orm" //
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
-	"net/http"
-	"strconv"
 )
 
 // UserLogin .
@@ -39,6 +40,36 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	////redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
 	////println(redis.RD.Get(ctx, req.Username).Val())
 	//c.JSON(consts.StatusOK, resp)
+
+	// mc := mw.JwtMiddleware.Key
+	// respCookie := protocol.AcquireCookie()
+	// respCookie.SetKey(string(mc))
+	// c.Response.Header.Cookie(respCookie)
+	// token := respCookie.token
+	// fmt.Println("token: ", tokenString)
+	// println("cookie: ", respCookie)
+	/*
+		loginResp := mw.JwtMiddleware.LoginResponse
+
+		//获取token
+		tmp := json.loads(loginResp)
+		token := tmp["token"]
+		println("token: ", token)
+	*/
+
+	// resp.UserId = u.UID
+	// resp.StatusCode = int32(0)
+	// resp.StatusMsg = "success"
+	// resp.Token = tokenString
+	//println(mw.JwtMiddleware.GetClaimsFromJWT(ctx, c))
+	//redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	//defer cancel()
+	//resp := new(user.DouyinUserLoginResponse)
+	//tk := "hisadfgh"
+	//resp.Token = tk
+	//redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
+	//println(redis.RD.Get(ctx, req.Username).Val())
+	// c.JSON(consts.StatusOK, resp)
 }
 
 // UserRegister .
@@ -107,7 +138,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	dal.UserAuth.Where(dal.UserAuth.UID.Eq(u.(*mw.Claim).ID))
 	totalFavorited := int64(0)
 	v, err := dal.Video.Where(dal.Video.UID.Eq(u.(*mw.Claim).ID)).Find()
-	for _,t := range v {
+	for _, t := range v {
 		tmpcount, _ := dal.Favorite.Where(dal.Favorite.Vid.Eq(t.Vid)).Count()
 		totalFavorited += tmpcount
 	}
@@ -120,22 +151,22 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	}
 	userInfoDB.WorkCount = workCount
 	userInfoDB.FavoriteCount = favoriteCount
-	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited,10)
+	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited, 10)
 	dal.UserAuth.Save(userInfoDB)
 	resp := new(user.DouyinUserResponse)
 	resp.StatusCode = int32(0)
 	resp.StatusMsg = "success"
 	resp.User = &user.User{
-		Id: userInfoDB.UID,
-		Name: userInfoDB.UserName,
-		FollowCount: userInfoDB.FollowCount,
-		IsFollow: userInfoDB.IsFollow,
-		Avatar: userInfoDB.Avatar,
+		Id:              userInfoDB.UID,
+		Name:            userInfoDB.UserName,
+		FollowCount:     userInfoDB.FollowCount,
+		IsFollow:        userInfoDB.IsFollow,
+		Avatar:          userInfoDB.Avatar,
 		BackgroundImage: userInfoDB.BackgroundImage,
-		Signature: userInfoDB.Signature,
-		TotalFavorited: userInfoDB.TotalFavorite,
-		WorkCount: userInfoDB.WorkCount,
-		FavoriteCount: userInfoDB.FavoriteCount,
+		Signature:       userInfoDB.Signature,
+		TotalFavorited:  userInfoDB.TotalFavorite,
+		WorkCount:       userInfoDB.WorkCount,
+		FavoriteCount:   userInfoDB.FavoriteCount,
 	}
 	c.JSON(http.StatusOK, resp)
 	return

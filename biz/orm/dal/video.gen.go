@@ -16,7 +16,7 @@ import (
 
 	"gorm.io/plugin/dbresolver"
 
-	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"github.com/simplecolding/douyin/biz/biz/orm/model"
 )
 
 func newVideo(db *gorm.DB, opts ...gen.DOOption) video {
@@ -44,13 +44,13 @@ type video struct {
 	videoDo
 
 	ALL       field.Asterisk
-	Vid       field.Int64
-	UID       field.Int64
-	PlayURL   field.String
-	CoverURL  field.String
-	Status    field.Bool
-	CreatedAt field.Time
-	UpdatedAt field.Time
+	Vid       field.Int64  // 主键
+	UID       field.Int64  // 作者
+	PlayURL   field.String // 播放地址
+	CoverURL  field.String // 封面地址
+	Status    field.Bool   // 是否删除 1:是  0:否
+	CreatedAt field.Time   // 创建时间
+	UpdatedAt field.Time   // 更新时间
 
 	fieldMap map[string]field.Expr
 }
