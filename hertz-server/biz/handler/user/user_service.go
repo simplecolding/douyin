@@ -114,6 +114,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid))
+
 	totalFavorited := int64(0)
 	v, err := dal.Video.Where(dal.Video.UID.Eq(uid)).Find()
 	for _, t := range v {

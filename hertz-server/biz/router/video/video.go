@@ -21,9 +21,9 @@ func Register(r *server.Hertz) {
 		_douyin := root.Group("/douyin", _douyinMw()...)
 		_douyin.GET("/feed", append(_getfeedMw(), video.GetFeed)...)
 		{
-			_publish := _douyin.Group("/publish", _publishMw()...)
-			_publish.POST("/action", append(_videopublishMw(), video.VideoPublish)...)
-			_publish.GET("/list", append(_getpublishlistMw(), video.GetPublishList)...)
+			_publish := _douyin.Group("/publish/", _publishMw()...)
+			_publish.POST("/action/", append(_videopublishMw(), video.VideoPublish)...)
+			_publish.GET("/list/", append(_getpublishlistMw(), video.GetPublishList)...)
 		}
 	}
 }

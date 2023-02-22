@@ -5,6 +5,7 @@ package video
 import (
 	"context"
 	"fmt"
+	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,7 +15,6 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	video "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/video"
-	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
 )
@@ -33,7 +33,12 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	println(r.Data)
+	// auth
+	flag, userName, uid := utils.Auth(ctx,r.Token)
+	if !flag {
+		c.JSON(consts.StatusBadRequest, "token错误")
+		return
+	}
 	// 将*multipart.FileHeader转为byte[]
 	file := r.Data
 	fileContent, _ := file.Open()
@@ -43,43 +48,12 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		fmt.Println("err in read file, err: ", err)
 		c.String(consts.StatusBadRequest, err.Error())
 	}
-	fmt.Println("len(data): ", len(byteContainer))
-	// jwt授权，从token中获取uid
-	fmt.Println("get uid:", mw.JwtMiddleware.IdentityKey)
 
-	// !!!!
-	// todo 这里mw会报错
-	// u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	// println("video:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
-
-	//tk := req.Token
-	//jwtToken, err := mw.JwtMiddleware.ParseTokenString(tk)
-	//tmp := jwt.ExtractClaimsFromToken(jwtToken)
-	// 检查文件类型
-	// fileType := http.DetectContentType(req.Data)
-
-	// userName := u.(*mw.Claim).Username
-	// if len(userName) == 0 {
-	// 	c.String(consts.StatusBadRequest, err.Error())
-	// 	return
-	// }
-
-	// TEST
-	fileName := strconv.FormatInt(time.Now().Unix(), 10) + "userName"
-	//fileEndings, err := mime.ExtensionsByType(fileType)
+	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
 	if err != nil {
 		println("get filetype failed")
 		return
 	}
-
-	// if fileType != "video/mp4" {
-	// 	resp.StatusCode = int32(1)
-	// 	resp.StatusMsg = "video type incorrect"
-	// 	c.JSON(consts.StatusOK, resp)
-	// 	println("video incorrect, type is ", fileType)
-	// 	return
-	// }
-
 	filePath := filepath.Join("./biz/public", fileName+".mp4")
 
 	newFile, err := os.Create(filePath)
@@ -95,10 +69,11 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	playUrl := "http://43.139.145.135:7777/public/" + fileName + ".mp4"
+	playUrl := utils.PlayURL + fileName + ".mp4"
 	println("playUrl: ", playUrl)
 	// test
-	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: 1, PlayURL: playUrl, CoverURL: "coverUrl"})
+	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL})
+
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		println("write to database failed")
@@ -123,14 +98,15 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+	// auth
+	flag, _ ,uid := utils.Auth(ctx,req.Token)
+	if !flag || uid != req.UserId{
+		c.JSON(consts.StatusBadRequest, "token错误")
+		return
+	}
 
-	// jwt授权，从token中获取uid
-	// u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	// println("video list:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
-
-	uid := req.UserId
 	resp := new(video.DouyinFavoriteListResponse)
-
+	// todo 需要limit8?分页??
 	data, err := dal.Video.Where(dal.Video.UID.Eq(uid)).Find()
 	if err != nil {
 		println("query database failed")
