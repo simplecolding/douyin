@@ -72,7 +72,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	playUrl := utils.PlayURL + fileName + ".mp4"
 	println("playUrl: ", playUrl)
 	// test
-	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL})
+	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL,Title: r.Title})
 
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
@@ -82,7 +82,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	println(filePath)
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
-	// println(len(req.Data))
+
 	c.JSON(consts.StatusOK, resp)
 }
 

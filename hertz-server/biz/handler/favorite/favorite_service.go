@@ -103,6 +103,7 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
 	resp.VideoList = video
+
 	c.JSON(consts.StatusOK, resp)
 }
 

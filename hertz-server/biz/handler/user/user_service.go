@@ -129,7 +129,9 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		println("database err")
 	}
 	userInfoDB.WorkCount = workCount
+	// 喜欢数
 	userInfoDB.FavoriteCount = favoriteCount
+	// 获得赞数量
 	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited, 10)
 	dal.UserAuth.Save(userInfoDB)
 
