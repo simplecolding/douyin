@@ -4,12 +4,14 @@ package comment
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	comment "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/comment"
-	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 )
 
 // CommentAction .
@@ -24,14 +26,28 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 	}
 	resp := new(comment.DouyinCommentActionResponse)
 	// jwt授权，从token中获取uid
-	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	println("comment:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+	// u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	// println("comment:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+	// 鉴权
+	flag, _, uid := utils.Auth(ctx, req.Token)
+	if !flag {
+		c.JSON(consts.StatusBadRequest, "token错误")
+		return
+	}
+	dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid))
+
+	if err != nil {
+		c.JSON(consts.StatusBadRequest, "id not found")
+		return
+	}
+
 	action := req.ActionType
 	if action == 1 {
-		dal.Comment.Create(&model.Comment{UID: u.(*mw.Claim).ID, Vid: req.VideoId, Content: req.CommentText})
-	} else {
+		err = dal.Comment.Create(&model.Comment{UID: uid, Vid: req.VideoId, Content: req.CommentText})
+	}
+	if action == 2 {
 		cid := req.CommentId
-		dal.Comment.Delete(&model.Comment{Cid: cid})
+		_, err = dal.Comment.Delete(&model.Comment{Cid: cid})
 	}
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
@@ -54,29 +70,37 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 	}
 
 	resp := new(comment.DouyinCommentListResponse)
-	data, err := dal.Comment.Where(dal.Comment.Vid.Eq(req.VideoId)).Find()
+	data, err := dal.Comment.Where(dal.Comment.Vid.Eq(req.VideoId)).Order(dal.Comment.UpdatedAt).Find()
 	var commentList []*comment.Comment
 	if err != nil {
 		resp.StatusCode = 1
-		resp.StatusMsg = "failed"
-	} else {
-		resp.StatusCode = 0
-		resp.StatusMsg = "success"
-		for _, d := range data {
-			var v comment.Comment
-			v.Id = d.Cid
-			v.Content = d.Content
-			v.CreateDate = d.CreatedAt.String()
-			userInfoDatabase, _ := dal.UserAuth.Where(dal.UserAuth.UID.Eq(v.Id)).Find()
-			var userInfo comment.User
-			for _, t := range userInfoDatabase {
-				userInfo.Id = t.UID
-				userInfo.Name = t.UserName
-			}
-			v.User = &userInfo
-			commentList = append(commentList, &v)
-		}
-		resp.CommentList = commentList
+		resp.StatusMsg = "find comments from videoId failed"
+		c.JSON(consts.StatusOK, resp)
+		return
 	}
+
+	resp.StatusCode = 0
+	resp.StatusMsg = "success"
+	fmt.Println(data)
+	for _, d := range data {
+		var v comment.Comment
+		v.Id = d.Cid
+		v.Content = d.Content
+		// 评论发布日期，格式 mm-dd
+		v.CreateDate = d.CreatedAt.Format("12-12")
+		userInfoDatabase, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(d.UID)).Find()
+		if err != nil {
+			continue
+		}
+		var userInfo comment.User
+		for _, t := range userInfoDatabase {
+			userInfo.Id = t.UID
+			userInfo.Name = t.UserName
+		}
+		v.User = &userInfo
+		commentList = append(commentList, &v)
+	}
+	resp.CommentList = commentList
+
 	c.JSON(consts.StatusOK, resp)
 }

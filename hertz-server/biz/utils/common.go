@@ -1,6 +1,7 @@
 package utils
+
 const (
-	LocalURL = "192.168.170.153"
-	PlayURL = "http://192.168.170.153:8888/public/"
-	CoverTestURL = "http://192.168.170.153:8888/public/cover/covertest.jpg"
+	LocalURL     = "127.0.0.1"
+	PlayURL      = "http://43.139.145.135:7777/public/"
+	CoverTestURL = "http://43.139.145.135:7777/public/cover/covertest.jpg"
 )

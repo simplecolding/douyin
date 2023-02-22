@@ -5,12 +5,13 @@ package video
 import (
 	"context"
 	"fmt"
-	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -34,7 +35,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	// auth
-	flag, userName, uid := utils.Auth(ctx,r.Token)
+	flag, userName, uid := utils.Auth(ctx, r.Token)
 	if !flag {
 		c.JSON(consts.StatusBadRequest, "token错误")
 		return
@@ -71,6 +72,7 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 
 	playUrl := utils.PlayURL + fileName + ".mp4"
 	println("playUrl: ", playUrl)
+	// title := "test"
 	// test
 	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL})
 
@@ -89,8 +91,6 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 // GetPublishList .
 // @router /douyin/publish/list [GET]
 func GetPublishList(ctx context.Context, c *app.RequestContext) {
-	// todo
-	// resp是正常的，应该是playUrl有问题 所以播放不了
 	var err error
 	var req video.DouyinPublishListRequest
 	err = c.BindAndValidate(&req)
@@ -99,8 +99,8 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	// auth
-	flag, _ ,uid := utils.Auth(ctx,req.Token)
-	if !flag || uid != req.UserId{
+	flag, _, uid := utils.Auth(ctx, req.Token)
+	if !flag || uid != req.UserId {
 		c.JSON(consts.StatusBadRequest, "token错误")
 		return
 	}
@@ -152,10 +152,6 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	// todo
 	// 30 videos for a single time
 	limit := 30
-	// data, err := dal.Video.Order("created_at desc").Limit(limit).Find()
-	// todo
-	// 这里不知道Order不知道咋放函数
-	//data, err := dal.Video.Limit(limit).Find()
 	// Not test
 	data, err := dal.Video.Order(dal.Video.UpdatedAt).Limit(limit).Find()
 	if err != nil {
