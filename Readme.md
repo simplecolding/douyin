@@ -41,3 +41,12 @@ cd xx/hertz-server
 hz update -I ./hzidl -idl hzidl/user/user.proto -module github.com/simplecolding/douyin/hertz-server
 
 ```
+# 鉴权
+```go
+// 鉴权
+flag, _ ,uid := utils.Auth(ctx,req.Token)
+if !flag{
+c.JSON(consts.StatusBadRequest, "token错误")
+return
+}
+```

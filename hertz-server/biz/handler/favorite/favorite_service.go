@@ -7,9 +7,10 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	"github.com/simplecolding/douyin/hertz-server/biz/utils"
+	"strconv"
 
 	favorite "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/favorite"
-	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 )
 
@@ -20,15 +21,25 @@ func FavoriteAction(ctx context.Context, c *app.RequestContext) {
 	var req favorite.DouyinFavoriteActionRequest
 	err = c.BindAndValidate(&req)
 	// jwt授权，从token中获取uid
-	u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
-	println("favorite:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
-	data, err := dal.Favorite.FilterWithVidAndUid(req.VideoId, u.(*mw.Claim).ID)
+	//u, _ := c.Get(mw.JwtMiddleware.IdentityKey)
+	//println("favorite:", u.(*mw.Claim).ID, u.(*mw.Claim).Username)
+	// 鉴权
+	flag, _ ,uid := utils.Auth(ctx,req.Token)
+	if !flag{
+		c.JSON(consts.StatusBadRequest, "token错误")
+		return
+	}
+	println("uid:",uid)
+	data, err := dal.Favorite.FilterWithVidAndUid(req.VideoId, uid)
+	if err != nil{
+		println("fasfsdfsa")
+	}
 	action := req.ActionType
 	if action == 1 {
 		if data != nil {
 			dal.Favorite.WithContext(ctx).Where(dal.Favorite.Lid.Eq(data[0].Lid)).Update(dal.Favorite.Status, false)
 		} else {
-			dal.Favorite.Create(&model.Favorite{Vid: req.VideoId, UID: u.(*mw.Claim).ID, Status: false})
+			dal.Favorite.Create(&model.Favorite{Vid: req.VideoId, UID: uid, Status: false})
 		}
 	} else {
 		dal.Favorite.WithContext(ctx).Where(dal.Favorite.Lid.Eq(data[0].Lid)).Update(dal.Favorite.Status, true)
@@ -55,15 +66,16 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	resp := new(favorite.DouyinFavoriteListResponse)
-
-	data, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(req.UserId)).Find()
+	uid := req.UserId
+	// todo 这里其实应该分页limit8;
+	data, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(req.UserId)).Order(dal.Favorite.UpdatedAt).Find()
+	userInfo := FavoriteQueryUser(uid)
 	var video []*favorite.Video
 	for _, d := range data {
-		//uid := d.UID
-		//user
 		var v favorite.Video
 		v.Id = d.Lid // 视频唯一标识
 		v.IsFavorite = true
+		v.Author = &userInfo
 		video = append(video, &v)
 	}
 
@@ -71,4 +83,39 @@ func GetFavoriteList(ctx context.Context, c *app.RequestContext) {
 	resp.StatusMsg = "success"
 	resp.VideoList = video
 	c.JSON(consts.StatusOK, resp)
+}
+
+// FavoriteQueryUser query userinfo
+func FavoriteQueryUser(uid int64) favorite.User {
+	dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid))
+	totalFavorited := int64(0)
+	v, err := dal.Video.Where(dal.Video.UID.Eq(uid)).Find()
+	for _, t := range v {
+		tmpcount, _ := dal.Favorite.Where(dal.Favorite.Vid.Eq(t.Vid)).Count()
+		totalFavorited += tmpcount
+	}
+	// 低性能代码
+	workCount, _ := dal.Video.Where(dal.Video.UID.Eq(uid)).Count()
+	favoriteCount, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(uid)).Count()
+	userInfoDB, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid)).First()
+	if err != nil {
+		println("database err")
+	}
+	userInfoDB.WorkCount = workCount
+	userInfoDB.FavoriteCount = favoriteCount
+	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited, 10)
+	dal.UserAuth.Save(userInfoDB)
+
+	return favorite.User{
+		Id:              userInfoDB.UID,
+		Name:            userInfoDB.UserName,
+		FollowCount:     userInfoDB.FollowCount,
+		IsFollow:        userInfoDB.IsFollow,
+		Avatar:          userInfoDB.Avatar,
+		BackgroundImage: userInfoDB.BackgroundImage,
+		Signature:       userInfoDB.Signature,
+		TotalFavorited:  userInfoDB.TotalFavorite,
+		WorkCount:       userInfoDB.WorkCount,
+		FavoriteCount:   userInfoDB.FavoriteCount,
+	}
 }

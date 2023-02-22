@@ -4,14 +4,11 @@ package main
 
 import (
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 )
 
 func main() {
 	h := server.Default()
 
-	// jwt鉴权
-	mw.Init()
 	// 静态资源访问
 	h.Static("/public","./biz")
 	register(h)

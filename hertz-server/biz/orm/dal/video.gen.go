@@ -29,6 +29,7 @@ func newVideo(db *gorm.DB, opts ...gen.DOOption) video {
 	_video.ALL = field.NewAsterisk(tableName)
 	_video.Vid = field.NewInt64(tableName, "vid")
 	_video.UID = field.NewInt64(tableName, "uid")
+	_video.Title = field.NewString(tableName, "title")
 	_video.PlayURL = field.NewString(tableName, "play_url")
 	_video.CoverURL = field.NewString(tableName, "cover_url")
 	_video.Status = field.NewBool(tableName, "status")
@@ -46,6 +47,7 @@ type video struct {
 	ALL       field.Asterisk
 	Vid       field.Int64
 	UID       field.Int64
+	Title     field.String
 	PlayURL   field.String
 	CoverURL  field.String
 	Status    field.Bool
@@ -69,6 +71,7 @@ func (v *video) updateTableName(table string) *video {
 	v.ALL = field.NewAsterisk(table)
 	v.Vid = field.NewInt64(table, "vid")
 	v.UID = field.NewInt64(table, "uid")
+	v.Title = field.NewString(table, "title")
 	v.PlayURL = field.NewString(table, "play_url")
 	v.CoverURL = field.NewString(table, "cover_url")
 	v.Status = field.NewBool(table, "status")
@@ -90,9 +93,10 @@ func (v *video) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (v *video) fillFieldMap() {
-	v.fieldMap = make(map[string]field.Expr, 7)
+	v.fieldMap = make(map[string]field.Expr, 8)
 	v.fieldMap["vid"] = v.Vid
 	v.fieldMap["uid"] = v.UID
+	v.fieldMap["title"] = v.Title
 	v.fieldMap["play_url"] = v.PlayURL
 	v.fieldMap["cover_url"] = v.CoverURL
 	v.fieldMap["status"] = v.Status

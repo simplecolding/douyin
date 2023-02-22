@@ -28,10 +28,10 @@ func _publishMw() []app.HandlerFunc {
 
 func _videopublishMw() []app.HandlerFunc {
 	// your code...
-	return nil// []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
+	return nil // []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
 }
 
 func _getpublishlistMw() []app.HandlerFunc {
 	// your code...
-	return nil// []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
+	return nil // []app.HandlerFunc{mw.JwtMiddleware.MiddlewareFunc()}
 }

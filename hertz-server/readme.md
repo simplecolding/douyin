@@ -6,6 +6,10 @@ hz new -I ./hzidl -idl hzidl/user/user.proto -module github.com/simplecolding/do
 hz new -I ./hzidl -idl hzidl/video/video.proto -module github.com/simplecolding/douyin/hertz-server
 hz new -I ./hzidl -idl hzidl/favorite/favorite.proto -module github.com/simplecolding/douyin/hertz-server
 hz new -I ./hzidl -idl hzidl/comment/comment.proto -module github.com/simplecolding/douyin/hertz-server
+
+hz update -I ./hzidl -idl hzidl/video/video.proto -module github.com/simplecolding/douyin/hertz-server
+hz update -I ./hzidl -idl hzidl/favorite/favorite.proto -module github.com/simplecolding/douyin/hertz-server
+hz update -I ./hzidl -idl hzidl/comment/comment.proto -module github.com/simplecolding/douyin/hertz-server
 go mod tidy -go=1.16 && go mod tidy -go=1.17
 3. 生成代码,业务代码在biz/handler
 4. test(先启动数据库)
@@ -44,4 +48,16 @@ curl --location --request GET '127.0.0.1:8888/douyin/favorite/list' \
 ## 跨源资源共享
 ```shell
 go get github.com/hertz-contrib/cors
+```
+
+```go
+type PublishActionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Token string                `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty" form:"token" query:"token"` // 用户鉴权token
+	Data  *multipart.FileHeader `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty" form:"data" query:"data"`     // 视频数据
+	Title string                `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty" form:"title" query:"title"` // 视频标题
+}
 ```

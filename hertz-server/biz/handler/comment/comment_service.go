@@ -62,7 +62,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 	} else {
 		resp.StatusCode = 0
 		resp.StatusMsg = "success"
-		for _, d := range data{
+		for _, d := range data {
 			var v comment.Comment
 			v.Id = d.Cid
 			v.Content = d.Content

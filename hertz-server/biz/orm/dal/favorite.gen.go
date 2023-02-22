@@ -170,6 +170,7 @@ type IFavoriteDo interface {
 	schema.Tabler
 
 	FilterWithVidAndUid(vid int64, uid int64) (result []model.Favorite, err error)
+	CountVidAndUid(vid int64, uid int64) (result []model.Favorite, err error)
 }
 
 // FilterWithVidAndUid SELECT * FROM @@table WHERE vid = @vid{{if uid !=-1}} AND uid = @uid{{end}}
@@ -179,6 +180,25 @@ func (f favoriteDo) FilterWithVidAndUid(vid int64, uid int64) (result []model.Fa
 	var generateSQL strings.Builder
 	params = append(params, vid)
 	generateSQL.WriteString("SELECT * FROM favorite WHERE vid = ? ")
+	if uid != -1 {
+		params = append(params, uid)
+		generateSQL.WriteString("AND uid = ? ")
+	}
+
+	var executeSQL *gorm.DB
+	executeSQL = f.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// CountVidAndUid SELECT count(*) FROM @@table WHERE vid = @vid{{if uid !=-1}} AND uid = @uid{{end}}
+func (f favoriteDo) CountVidAndUid(vid int64, uid int64) (result []model.Favorite, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, vid)
+	generateSQL.WriteString("SELECT count(*) FROM favorite WHERE vid = ? ")
 	if uid != -1 {
 		params = append(params, uid)
 		generateSQL.WriteString("AND uid = ? ")

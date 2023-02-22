@@ -12,14 +12,16 @@ import (
 
 func TestUserInfo(t *testing.T) {
 	h := server.Default()
-	h.GET("/douyin/user", UserLogin)
+	h.GET("/douyin/user", UserInfo)
 	url := "/douyin/user"
 	method := "GET"
+
+	reqBody := strings.NewReader("token=IiujEkqTWcmsEuJOLRKcpDQuasgDjernZMwDFuZhNspVJlbyCD&user_id=6")
 	w := ut.PerformRequest(h.Engine,
 		method,
 		url,
-		nil,
-		ut.Header{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbSI6eyJJRCI6MTUsIlVzZXJuYW1lIjoiYWFhYWFhYSJ9LCJleHAiOjE2NzY5MzEwMDMsIm9yaWdfaWF0IjoxNjc2ODk1MDAzfQ.GpzZpgut83PAKHbOPwDCELN3IwJQFixjxPOKn0kGPOQ"},
+		&ut.Body{reqBody,reqBody.Len()},
+		ut.Header{"Content-Type", "application/x-www-form-urlencoded"},
 	)
 	resp := w.Result()
 	//assert.DeepEqual(t, 200, resp.StatusCode())
@@ -33,7 +35,7 @@ func TestUserLogin(t *testing.T) {
 	h.POST("/douyin/user/login", UserLogin)
 	//username := "aaaaaaaa"
 	//reqBody := strings.NewReader("username=" + username + "&password=aaaaaaa")
-	url := "/douyin/user/login?username=aaaaaaa&password=aaaaaaa"
+	url := "/douyin/user/login?username=oDwxGVXO&password=aaaaaaa"
 	method := "POST"
 	w := ut.PerformRequest(h.Engine,
 		method,
@@ -66,6 +68,7 @@ func TestUserRegister(t *testing.T) {
 	println(string(resp.Body()))
 	//assert.DeepEqual(t, "{\"message\":\"pong\"}", string(resp.Body()))
 }
+
 func GenerateRandomString(n int) (string, error) {
 	// 生成随机字节数组
 	b := make([]byte, n)

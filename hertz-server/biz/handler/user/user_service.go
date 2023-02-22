@@ -4,13 +4,15 @@ package user
 
 import (
 	"context"
+	"github.com/simplecolding/douyin/hertz-server/biz/redis"
+	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	user "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/user"
-	"github.com/simplecolding/douyin/hertz-server/biz/mw"
 	_ "github.com/simplecolding/douyin/hertz-server/biz/mw"
 	_ "github.com/simplecolding/douyin/hertz-server/biz/orm" //
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
@@ -27,49 +29,27 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
+	u, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(req.Username)).First()
+	if err != nil{
+		c.JSON(consts.StatusBadRequest,"用户不存在!!!")
+	}
+	if u.Password != req.Password{
+		c.JSON(consts.StatusBadRequest,"密码错误!!!")
+	}
+	redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Hour)
+	defer cancel()
+	resp := new(user.DouyinUserLoginResponse)
 
-	mw.Init()
-	mw.JwtMiddleware.LoginHandler(ctx, c)
+	tk := utils.GenToken()
+	println("token",tk)
+	resp.Token = tk
+	redis.RD.Set(redisCtx, tk, req.Username, 500*time.Hour)
+	redis.RD.Set(redisCtx, req.Username, u.UID ,500*time.Hour)
 
-	//mw.JwtMiddleware.ParseTokenString()
-	//redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-	//defer cancel()
-	//resp := new(user.DouyinUserLoginResponse)
-	//tk := "hisadfgh"
-	//resp.Token = tk
-	////redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
-	////println(redis.RD.Get(ctx, req.Username).Val())
-	//c.JSON(consts.StatusOK, resp)
-
-	// mc := mw.JwtMiddleware.Key
-	// respCookie := protocol.AcquireCookie()
-	// respCookie.SetKey(string(mc))
-	// c.Response.Header.Cookie(respCookie)
-	// token := respCookie.token
-	// fmt.Println("token: ", tokenString)
-	// println("cookie: ", respCookie)
-	/*
-		loginResp := mw.JwtMiddleware.LoginResponse
-
-		//获取token
-		tmp := json.loads(loginResp)
-		token := tmp["token"]
-		println("token: ", token)
-	*/
-
-	// resp.UserId = u.UID
-	// resp.StatusCode = int32(0)
-	// resp.StatusMsg = "success"
-	// resp.Token = tokenString
-	//println(mw.JwtMiddleware.GetClaimsFromJWT(ctx, c))
-	//redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
-	//defer cancel()
-	//resp := new(user.DouyinUserLoginResponse)
-	//tk := "hisadfgh"
-	//resp.Token = tk
-	//redis.RD.Set(ctx, req.Username, tk, 10*time.Minute)
-	//println(redis.RD.Get(ctx, req.Username).Val())
-	// c.JSON(consts.StatusOK, resp)
+	resp.StatusCode = 0
+	resp.StatusMsg = "success"
+	resp.UserId = u.UID
+	c.JSON(consts.StatusOK, resp)
 }
 
 // UserRegister .
@@ -127,25 +107,23 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-	// 注意这里
-	u, _ := c.Get(mw.IdentityKey)
-	println(u.(*mw.Claim).ID, u.(*mw.Claim).Username)
-	//tk := req.Token
-	//jwtToken, err := mw.JwtMiddleware.ParseTokenString(tk)
-	//tmp := jwt.ExtractClaimsFromToken(jwtToken)
-	//tmp[mw.IdentityKey]
-
-	dal.UserAuth.Where(dal.UserAuth.UID.Eq(u.(*mw.Claim).ID))
+	// 鉴权
+	flag, _ ,uid := utils.Auth(ctx,req.Token)
+	if !flag{
+		c.JSON(consts.StatusBadRequest, "token错误")
+		return
+	}
+	dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid))
 	totalFavorited := int64(0)
-	v, err := dal.Video.Where(dal.Video.UID.Eq(u.(*mw.Claim).ID)).Find()
+	v, err := dal.Video.Where(dal.Video.UID.Eq(uid)).Find()
 	for _, t := range v {
 		tmpcount, _ := dal.Favorite.Where(dal.Favorite.Vid.Eq(t.Vid)).Count()
 		totalFavorited += tmpcount
 	}
 	// 低性能代码
-	workCount, _ := dal.Video.Where(dal.Video.UID.Eq(u.(*mw.Claim).ID)).Count()
-	favoriteCount, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(u.(*mw.Claim).ID)).Count()
-	userInfoDB, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(u.(*mw.Claim).ID)).First()
+	workCount, _ := dal.Video.Where(dal.Video.UID.Eq(uid)).Count()
+	favoriteCount, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(uid)).Count()
+	userInfoDB, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid)).First()
 	if err != nil {
 		println("database err")
 	}
@@ -153,6 +131,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	userInfoDB.FavoriteCount = favoriteCount
 	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited, 10)
 	dal.UserAuth.Save(userInfoDB)
+
 	resp := new(user.DouyinUserResponse)
 	resp.StatusCode = int32(0)
 	resp.StatusMsg = "success"
@@ -170,4 +149,39 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	}
 	c.JSON(http.StatusOK, resp)
 	return
+}
+
+// QueryUser query userinfo
+func QueryUser(uid int64) user.User{
+	dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid))
+	totalFavorited := int64(0)
+	v, err := dal.Video.Where(dal.Video.UID.Eq(uid)).Find()
+	for _, t := range v {
+		tmpcount, _ := dal.Favorite.Where(dal.Favorite.Vid.Eq(t.Vid)).Count()
+		totalFavorited += tmpcount
+	}
+	// 低性能代码
+	workCount, _ := dal.Video.Where(dal.Video.UID.Eq(uid)).Count()
+	favoriteCount, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(uid)).Count()
+	userInfoDB, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid)).First()
+	if err != nil {
+		println("database err")
+	}
+	userInfoDB.WorkCount = workCount
+	userInfoDB.FavoriteCount = favoriteCount
+	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited, 10)
+	dal.UserAuth.Save(userInfoDB)
+
+	return  user.User{
+		Id:              userInfoDB.UID,
+		Name:            userInfoDB.UserName,
+		FollowCount:     userInfoDB.FollowCount,
+		IsFollow:        userInfoDB.IsFollow,
+		Avatar:          userInfoDB.Avatar,
+		BackgroundImage: userInfoDB.BackgroundImage,
+		Signature:       userInfoDB.Signature,
+		TotalFavorited:  userInfoDB.TotalFavorite,
+		WorkCount:       userInfoDB.WorkCount,
+		FavoriteCount:   userInfoDB.FavoriteCount,
+	}
 }

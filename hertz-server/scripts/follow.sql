@@ -22,6 +22,7 @@ CREATE TABLE `user_auth` (
 CREATE TABLE `video` (
                                `vid` bigint unsigned AUTO_INCREMENT COMMENT '主键',
                                `uid` bigint not null COMMENT '作者',
+                               `title` varchar(255) not null COMMENT '视频标题',
                                `play_url` varchar(255) not null COMMENT '播放地址',
                                `cover_url` varchar(255) not null COMMENT '封面地址',
                                `status` tinyint(1) DEFAULT '1' COMMENT '是否删除 1:是  0:否',

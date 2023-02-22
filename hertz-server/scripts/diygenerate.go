@@ -12,6 +12,8 @@ import (
 type FavoriteQuerier interface {
 	// FilterWithVidAndUid SELECT * FROM @@table WHERE vid = @vid{{if uid !=-1}} AND uid = @uid{{end}}
 	FilterWithVidAndUid(vid, uid int64) ([]gen.T, error)
+	// CountVidAndUid SELECT count(*) FROM @@table WHERE vid = @vid{{if uid !=-1}} AND uid = @uid{{end}}
+	CountVidAndUid(vid, uid int64) ([]gen.T, error)
 }
 
 // CommentQuerier UserQuerier Querier Dynamic SQL

@@ -12,8 +12,9 @@ const TableNameVideo = "video"
 
 // Video mapped from table <video>
 type Video struct {
-	Vid       int64     `gorm:"column:vid;primaryKey;autoIncrement:true" json:"vid"`           // 主键
-	UID       int64     `gorm:"column:uid;not null" json:"uid"`                                // 作者
+	Vid       int64     `gorm:"column:vid;primaryKey;autoIncrement:true" json:"vid"` // 主键
+	UID       int64     `gorm:"column:uid;not null" json:"uid"`                      // 作者
+	Title     string    `gorm:"column:title" json:"title"`
 	PlayURL   string    `gorm:"column:play_url;not null" json:"play_url"`                      // 播放地址
 	CoverURL  string    `gorm:"column:cover_url;not null" json:"cover_url"`                    // 封面地址
 	Status    bool      `gorm:"column:status;default:1" json:"status"`                         // 是否删除 1:是  0:否
