@@ -5,6 +5,7 @@ package comment
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -43,7 +44,11 @@ func CommentAction(ctx context.Context, c *app.RequestContext) {
 
 	action := req.ActionType
 	if action == 1 {
-		err = dal.Comment.Create(&model.Comment{UID: uid, Vid: req.VideoId, Content: req.CommentText})
+		// SH timezone
+		var cstSh, _ = time.LoadLocation("Asia/Shanghai")
+		t := time.Now().In(cstSh)
+		err = dal.Comment.Create(&model.Comment{UID: uid, Vid: req.VideoId, Content: req.CommentText,
+			CreatedAt: t})
 	}
 	if action == 2 {
 		cid := req.CommentId
@@ -87,7 +92,7 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		v.Id = d.Cid
 		v.Content = d.Content
 		// 评论发布日期，格式 mm-dd
-		v.CreateDate = d.CreatedAt.String()
+		v.CreateDate = d.CreatedAt.Format("01-02 15:04:05")
 		userInfoDatabase, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(d.UID)).Find()
 		if err != nil {
 			continue
