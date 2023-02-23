@@ -3,20 +3,26 @@
 package video
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/disintegration/imaging"
 	video "github.com/simplecolding/douyin/hertz-server/biz/model/hertz/video"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/dal"
 	"github.com/simplecolding/douyin/hertz-server/biz/orm/model"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 // VideoPublish .
@@ -46,38 +52,11 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	}
 
 	byteContainer = fileRaw
-	//err = c.BindAndValidate(&r)
-	//if err != nil {
-	//	fmt.Println("err in bind", err)
-	//	c.String(consts.StatusBadRequest, err.Error())
-	//	return
-	//}
-
-	//byteContainer = r.Data
-	// auth
 	flag, userName, uid := utils.Auth(ctx, r.Token)
 	if !flag {
 		c.JSON(consts.StatusBadRequest, "token错误")
 		return
 	}
-	// 将*multipart.FileHeader转为byte[]
-	//file := r.Data
-	//fileContent, _ := file.Open()
-	//// defer file.Close()
-	//byteContainer, err = ioutil.ReadAll(fileContent)
-	//if err != nil {
-	//	fmt.Println("err in read file, err: ", err)
-	//	c.String(consts.StatusBadRequest, err.Error())
-	//}
-
-	// var input bytes.Buffer
-	// gzipWriter := gzip.NewWriter(&input)
-	// defer gzipWriter.Close()
-	// if err != nil {
-	// 	c.JSON(consts.StatusBadRequest, err.Error())
-	// 	println("gzip failed")
-	// 	return
-	// }
 	// gzipWriter.Write(byteContainer)
 	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
 	if err != nil {
@@ -103,12 +82,14 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	println("playUrl: ", playUrl)
 	// title := "test"
 	// test
-
+	// 生成封面
+	coverPath := "./biz/public/cover/" + fileName
+	coverPath, err = GetSnapshot(filePath, coverPath,1)
 	var cstSh, _ = time.LoadLocation("Asia/Shanghai")
 	t := time.Now().In(cstSh)
-	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL,
+	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverURL+fileName+".png",
 		CreatedAt: t})
-
+	
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
 		println("write to database failed")
@@ -180,7 +161,8 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		c.String(consts.StatusBadRequest, err.Error())
 		return
 	}
-
+	// 鉴权,如果没有token的话uid为0
+	_, _, uid := utils.Auth(ctx, req.Token)
 	resp := new(video.DouyinFeedResponse)
 	// todo
 	// 30 videos for a single time
@@ -200,10 +182,11 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		tmp.CoverUrl = d.CoverURL
 		tmp.PlayUrl = d.PlayURL
 		tmp.Title = d.Title
-		tmp.FavoriteCount, _ = dal.Video.Where(dal.Video.Vid.Eq(d.Vid)).Count()
+		tmp.FavoriteCount, _ = dal.Favorite.Where(dal.Favorite.Vid.Eq(d.Vid)).Count()
 		tmp.CommentCount, _ = dal.Comment.Where(dal.Comment.Vid.Eq(d.Vid)).Count()
-		fav, _ := dal.Favorite.CountVidAndUid(d.Vid, d.UID)
-		tmp.IsFavorite = len(fav) >= 1
+		//fav, _ := dal.Favorite.CountVidAndUid(d.Vid, d.UID)
+		fav, _ := dal.Favorite.Where(dal.Favorite.Vid.Eq(d.Vid)).Where(dal.Favorite.UID.Eq(uid)).Count()
+		tmp.IsFavorite = fav >= 1
 		tmp.Title = d.Title
 		userInfo := VideoQueryUser(d.UID)
 		tmp.Author = &userInfo
@@ -246,4 +229,33 @@ func VideoQueryUser(uid int64) video.User {
 		WorkCount:       userInfoDB.WorkCount,
 		FavoriteCount:   userInfoDB.FavoriteCount,
 	}
+}
+
+func GetSnapshot(videoPath, snapshotPath string, frameNum int) (snapshotName string, err error) {
+	buf := bytes.NewBuffer(nil)
+	err = ffmpeg.Input(videoPath).
+		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
+		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
+		WithOutput(buf, os.Stdout).
+		Run()
+	if err != nil {
+		log.Fatal("生成缩略图失败：", err)
+		return "", err
+	}
+
+	img, err := imaging.Decode(buf)
+	if err != nil {
+		log.Fatal("生成缩略图失败：", err)
+		return "", err
+	}
+
+	err = imaging.Save(img, snapshotPath+".png")
+	if err != nil {
+		log.Fatal("生成缩略图失败：", err)
+		return "", err
+	}
+
+	names := strings.Split(snapshotPath, "\\")
+	snapshotName = names[len(names)-1] + ".png"
+	return
 }

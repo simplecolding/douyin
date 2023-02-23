@@ -4,6 +4,7 @@ package user
 
 import (
 	"context"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,9 +34,11 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 	u, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(req.Username)).First()
 	if err != nil {
 		c.JSON(consts.StatusBadRequest, "用户不存在!!!")
+		return
 	}
 	if u.Password != req.Password {
 		c.JSON(consts.StatusBadRequest, "密码错误!!!")
+		return
 	}
 	redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Hour)
 	defer cancel()
@@ -85,7 +88,16 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 
 	var cstSh, _ = time.LoadLocation("Asia/Shanghai")
 	t := time.Now().In(cstSh)
-	userinfo := model.UserAuth{UserName: username, Password: password, CreatedAt: t}
+	rand.Seed(time.Now().UnixNano())
+	randID := rand.Intn(5) + 1
+	userinfo := model.UserAuth{
+		UserName: username,
+		Password: password,
+		CreatedAt: t,
+		Avatar: utils.AvatarTest + strconv.Itoa(randID) + ".jpg",
+		BackgroundImage: utils.BackgroundTest + strconv.Itoa(randID) + ".jpg",
+		Signature: "这个人很懒,什么都没有留下",
+	}
 	err = dal.UserAuth.Create(&userinfo)
 	if err != nil {
 		resp.UserId = -1
@@ -113,6 +125,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	}
 	// 鉴权
 	flag, _, uid := utils.Auth(ctx, req.Token)
+	println(uid)
 	if !flag {
 		c.JSON(consts.StatusBadRequest, "token错误")
 		return
@@ -132,7 +145,10 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 	if err != nil {
 		println("database err")
 	}
-	userInfoDB.WorkCount = workCount
+	if workCount > 0 {
+		userInfoDB.WorkCount = workCount
+	}
+
 	// 喜欢数
 	userInfoDB.FavoriteCount = favoriteCount
 	// 获得赞数量
