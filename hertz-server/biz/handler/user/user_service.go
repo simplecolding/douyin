@@ -4,11 +4,12 @@ package user
 
 import (
 	"context"
-	"github.com/simplecolding/douyin/hertz-server/biz/redis"
-	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/simplecolding/douyin/hertz-server/biz/redis"
+	"github.com/simplecolding/douyin/hertz-server/biz/utils"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -30,21 +31,21 @@ func UserLogin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	u, err := dal.UserAuth.Where(dal.UserAuth.UserName.Eq(req.Username)).First()
-	if err != nil{
-		c.JSON(consts.StatusBadRequest,"用户不存在!!!")
+	if err != nil {
+		c.JSON(consts.StatusBadRequest, "用户不存在!!!")
 	}
-	if u.Password != req.Password{
-		c.JSON(consts.StatusBadRequest,"密码错误!!!")
+	if u.Password != req.Password {
+		c.JSON(consts.StatusBadRequest, "密码错误!!!")
 	}
 	redisCtx, cancel := context.WithTimeout(context.Background(), 500*time.Hour)
 	defer cancel()
 	resp := new(user.DouyinUserLoginResponse)
 
 	tk := utils.GenToken()
-	println("token",tk)
+	println("token", tk)
 	resp.Token = tk
 	redis.RD.Set(redisCtx, tk, req.Username, 500*time.Hour)
-	redis.RD.Set(redisCtx, req.Username, u.UID ,500*time.Hour)
+	redis.RD.Set(redisCtx, req.Username, u.UID, 500*time.Hour)
 
 	resp.StatusCode = 0
 	resp.StatusMsg = "success"
@@ -81,7 +82,10 @@ func UserRegister(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusOK, resp)
 		return
 	}
-	userinfo := model.UserAuth{UserName: username, Password: password}
+
+	var cstSh, _ = time.LoadLocation("Asia/Shanghai")
+	t := time.Now().In(cstSh)
+	userinfo := model.UserAuth{UserName: username, Password: password, CreatedAt: t}
 	err = dal.UserAuth.Create(&userinfo)
 	if err != nil {
 		resp.UserId = -1
@@ -108,8 +112,8 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	// 鉴权
-	flag, _ ,uid := utils.Auth(ctx,req.Token)
-	if !flag{
+	flag, _, uid := utils.Auth(ctx, req.Token)
+	if !flag {
 		c.JSON(consts.StatusBadRequest, "token错误")
 		return
 	}
@@ -155,7 +159,7 @@ func UserInfo(ctx context.Context, c *app.RequestContext) {
 }
 
 // QueryUser query userinfo
-func QueryUser(uid int64) user.User{
+func QueryUser(uid int64) user.User {
 	dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid))
 	totalFavorited := int64(0)
 	v, err := dal.Video.Where(dal.Video.UID.Eq(uid)).Find()
@@ -175,7 +179,7 @@ func QueryUser(uid int64) user.User{
 	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited, 10)
 	dal.UserAuth.Save(userInfoDB)
 
-	return  user.User{
+	return user.User{
 		Id:              userInfoDB.UID,
 		Name:            userInfoDB.UserName,
 		FollowCount:     userInfoDB.FollowCount,

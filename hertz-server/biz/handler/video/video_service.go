@@ -70,6 +70,15 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	//	c.String(consts.StatusBadRequest, err.Error())
 	//}
 
+	// var input bytes.Buffer
+	// gzipWriter := gzip.NewWriter(&input)
+	// defer gzipWriter.Close()
+	// if err != nil {
+	// 	c.JSON(consts.StatusBadRequest, err.Error())
+	// 	println("gzip failed")
+	// 	return
+	// }
+	// gzipWriter.Write(byteContainer)
 	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
 	if err != nil {
 		println("get filetype failed")
@@ -94,7 +103,11 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	println("playUrl: ", playUrl)
 	// title := "test"
 	// test
-	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL,Title: r.Title})
+
+	var cstSh, _ = time.LoadLocation("Asia/Shanghai")
+	t := time.Now().In(cstSh)
+	err = dal.Video.WithContext(ctx).Create(&model.Video{UID: uid, PlayURL: playUrl, CoverURL: utils.CoverTestURL,
+		CreatedAt: t})
 
 	if err != nil {
 		c.String(consts.StatusBadRequest, err.Error())
@@ -173,7 +186,7 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 	// 30 videos for a single time
 	limit := 30
 	// Not test
-	data, err := dal.Video.Order(dal.Video.UpdatedAt.Desc()).Limit(limit).Find()
+	data, err := dal.Video.Order(dal.Video.CreatedAt.Desc()).Limit(limit).Find()
 	if err != nil {
 		println("query database failed")
 		return
@@ -186,6 +199,14 @@ func GetFeed(ctx context.Context, c *app.RequestContext) {
 		tmp.Id = d.Vid
 		tmp.CoverUrl = d.CoverURL
 		tmp.PlayUrl = d.PlayURL
+		tmp.Title = d.Title
+		tmp.FavoriteCount, _ = dal.Video.Where(dal.Video.Vid.Eq(d.Vid)).Count()
+		tmp.CommentCount, _ = dal.Comment.Where(dal.Comment.Vid.Eq(d.Vid)).Count()
+		fav, _ := dal.Favorite.CountVidAndUid(d.Vid, d.UID)
+		tmp.IsFavorite = len(fav) >= 1
+		tmp.Title = d.Title
+		userInfo := VideoQueryUser(d.UID)
+		tmp.Author = &userInfo
 		v = append(v, &tmp)
 	}
 	resp.VideoList = v
