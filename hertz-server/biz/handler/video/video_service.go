@@ -4,7 +4,6 @@ package video
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,15 +24,36 @@ import (
 func VideoPublish(ctx context.Context, c *app.RequestContext) {
 	//req.Data type : bytes
 	var err error
-	var r video.PublishActionRequest
+	//var r video.PublishActionRequest
+	var r video.DouyinPublishActionRequest
 	var resp video.DouyinPublishActionResponse
 	var byteContainer []byte
-	err = c.BindAndValidate(&r)
+
+	r.Token, _ = c.GetPostForm("token")
+	r.Title, _ = c.GetPostForm("title")
+	fileHeader, err := c.FormFile("data")
 	if err != nil {
-		fmt.Println("err in bind", err)
-		c.String(consts.StatusBadRequest, err.Error())
-		return
+		panic(err)
 	}
+	open, err := fileHeader.Open()
+	if err != nil {
+		panic(err)
+	}
+	// 读取文件到字节数组
+	fileRaw, err := ioutil.ReadAll(open)
+	if err != nil {
+		panic(err)
+	}
+
+	byteContainer = fileRaw
+	//err = c.BindAndValidate(&r)
+	//if err != nil {
+	//	fmt.Println("err in bind", err)
+	//	c.String(consts.StatusBadRequest, err.Error())
+	//	return
+	//}
+
+	//byteContainer = r.Data
 	// auth
 	flag, userName, uid := utils.Auth(ctx, r.Token)
 	if !flag {
@@ -41,14 +61,14 @@ func VideoPublish(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 	// 将*multipart.FileHeader转为byte[]
-	file := r.Data
-	fileContent, _ := file.Open()
-	// defer file.Close()
-	byteContainer, err = ioutil.ReadAll(fileContent)
-	if err != nil {
-		fmt.Println("err in read file, err: ", err)
-		c.String(consts.StatusBadRequest, err.Error())
-	}
+	//file := r.Data
+	//fileContent, _ := file.Open()
+	//// defer file.Close()
+	//byteContainer, err = ioutil.ReadAll(fileContent)
+	//if err != nil {
+	//	fmt.Println("err in read file, err: ", err)
+	//	c.String(consts.StatusBadRequest, err.Error())
+	//}
 
 	fileName := strconv.FormatInt(time.Now().Unix(), 10) + userName
 	if err != nil {
