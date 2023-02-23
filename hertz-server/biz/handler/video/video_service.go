@@ -114,7 +114,7 @@ func GetPublishList(ctx context.Context, c *app.RequestContext) {
 	}
 	// auth
 	flag, _, uid := utils.Auth(ctx, req.Token)
-	if !flag || uid != req.UserId {
+	if !flag {
 		c.JSON(consts.StatusBadRequest, "token错误")
 		return
 	}
