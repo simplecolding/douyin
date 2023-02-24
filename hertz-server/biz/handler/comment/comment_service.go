@@ -5,6 +5,7 @@ package comment
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -93,21 +94,56 @@ func GetCommentList(ctx context.Context, c *app.RequestContext) {
 		v.Content = d.Content
 		// 评论发布日期，格式 mm-dd
 		v.CreateDate = d.CreatedAt.Format("01-02 15:04:05")
-		userInfoDatabase, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(d.UID)).Find()
-		if err != nil {
-			continue
-		}
-		var userInfo comment.User
-		for _, t := range userInfoDatabase {
-			userInfo.Id = t.UID
-			userInfo.Name = t.UserName
-		}
+		//userInfoDatabase, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(d.UID)).Find()
+		//if err != nil {
+		//	continue
+		//}
+		//var userInfo comment.User
+		//for _, t := range userInfoDatabase {
+		//	userInfo.Id = t.UID
+		//	userInfo.Name = t.UserName
+		//}
+		userInfo := CommentQueryUser(d.UID)
 		v.User = &userInfo
 
-		fmt.Println(v)
 		commentList = append(commentList, &v)
 	}
 	resp.CommentList = commentList
 
 	c.JSON(consts.StatusOK, resp)
+}
+
+// CommentQueryUser query userinfo
+func CommentQueryUser(uid int64) comment.User {
+	dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid))
+	totalFavorited := int64(0)
+	v, err := dal.Video.Where(dal.Video.UID.Eq(uid)).Find()
+	for _, t := range v {
+		tmpcount, _ := dal.Favorite.Where(dal.Favorite.Vid.Eq(t.Vid)).Count()
+		totalFavorited += tmpcount
+	}
+	// 低性能代码
+	workCount, _ := dal.Video.Where(dal.Video.UID.Eq(uid)).Count()
+	favoriteCount, _ := dal.Favorite.Where(dal.Favorite.UID.Eq(uid)).Count()
+	userInfoDB, err := dal.UserAuth.Where(dal.UserAuth.UID.Eq(uid)).First()
+	if err != nil {
+		println("database err")
+	}
+	userInfoDB.WorkCount = workCount
+	userInfoDB.FavoriteCount = favoriteCount
+	userInfoDB.TotalFavorite = strconv.FormatInt(totalFavorited, 10)
+	dal.UserAuth.Save(userInfoDB)
+
+	return comment.User{
+		Id:              userInfoDB.UID,
+		Name:            userInfoDB.UserName,
+		FollowCount:     userInfoDB.FollowCount,
+		IsFollow:        userInfoDB.IsFollow,
+		Avatar:          userInfoDB.Avatar,
+		BackgroundImage: userInfoDB.BackgroundImage,
+		Signature:       userInfoDB.Signature,
+		TotalFavorited:  userInfoDB.TotalFavorite,
+		WorkCount:       userInfoDB.WorkCount,
+		FavoriteCount:   userInfoDB.FavoriteCount,
+	}
 }
